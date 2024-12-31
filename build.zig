@@ -37,8 +37,11 @@ pub fn build(b: *std.Build) void {
         .name = "zfirmware.elf",
         .root_source_file = b.path("src/main.zig"),
         .target = target,
-        .optimize = .ReleaseSmall,
+        .optimize = .ReleaseSafe,
+        //.optimize = .ReleaseSafe,
     });
+
+    exe.root_module.strip = false;
 
     //const target = getTarget(b);
     // const target = .{
@@ -63,6 +66,7 @@ pub fn build(b: *std.Build) void {
     //exe.addCSourceFile(.{ .file = b.path("c3dk.c"), .flags = &cflags });
     //exe.entry = .{ .symbol_name = "_reset" };
     exe.setLinkerScriptPath(b.path("src/link.ld"));
+
     b.installArtifact(exe);
 
     // add run step for each sample

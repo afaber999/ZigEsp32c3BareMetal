@@ -7,8 +7,12 @@ ENTRY(_start);
 
 SECTIONS {
   .text     : { 
+    _stext = .;
+
     KEEP(*(.text.start))
-    *(.text) *(.text*) } > iram
+    *(.text) *(.text*)
+    _etext = .;
+  } > iram
 
   .data : {
     . = ALIGN(16);
@@ -35,11 +39,18 @@ SECTIONS {
     *(COMMON)
     . = ALIGN(16);
     _ebss = .;
+    _heap_start = .;
   } > dram
 
   . = ALIGN(16);
   PROVIDE(end = .);
   PROVIDE(_end = .);
+
 }
 
+
 __stack_top = ORIGIN(dram) + LENGTH(dram);
+__stack_size = 0x400;
+__stack_bottom = __stack_top - __stack_size;
+_heap_end = __stack_bottom;
+_heap_size = _heap_end - _heap_start;

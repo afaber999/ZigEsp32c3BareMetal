@@ -215,3 +215,84 @@ var tw = TermWriter{};
 pub fn getWriter() *TermWriter {
     return &tw;
 }
+
+extern const _stext: u32;
+extern const _etext: u32;
+extern var _sbss: u32;
+extern const _ebss: u32;
+extern const __stack_top: u32;
+extern const __stack_bottom: u32;
+
+extern const _sdata: u32;
+extern const _edata: u32;
+
+extern const _heap_start: u32;
+extern const _heap_end: u32;
+extern const _heap_size: u32;
+
+export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
+    asm volatile ("la sp, __stack_top");
+    asm volatile (
+        \\.option push
+        \\.option norelax
+        \\la gp, __global_pointer$
+        \\.option pop
+    );
+
+    const bss_len = @intFromPtr(&_ebss) - @intFromPtr(&_sbss);
+
+    if (bss_len > 0) {
+        @setRuntimeSafety(false);
+        const bss = @as([*]volatile u32, @ptrCast(&_sbss))[0..bss_len];
+        @memset(bss, 0x00000000);
+    }
+
+    asm volatile ("jal zero, _c3Start");
+}
+
+pub fn sbss() [*]volatile u32 {
+    return @ptrCast(&_sbss);
+}
+
+pub fn ebss() [*]const u32 {
+    return @ptrCast(&_ebss);
+}
+
+//var c3Allocator: std.heap.FixedBufferAllocator = null;
+var c3Allocator = std.heap.FixedBufferAllocator.init(&_ebss);
+
+pub fn heapAllocatory() std.mem.Allocator {
+
+    // if c3Allocator == undefined {
+    //     const buffer: [4096]u8 = undefined;
+    // }
+    // if (c3Allocator == null) {
+
+    // }
+    return &c3Allocator;
+}
+
+pub fn showStackInfo() !void {
+    const sz = @as(u32, @intFromPtr(&__stack_top)) - @as(u32, @intFromPtr(&__stack_bottom));
+    _ = try getWriter().writer().print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &__stack_top, &__stack_bottom, sz });
+}
+
+pub fn showDataInfo() !void {
+    const sz = @as(u32, @intFromPtr(&_edata)) - @as(u32, @intFromPtr(&_sdata));
+    _ = try getWriter().writer().print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &_edata, &_sdata, sz });
+}
+
+pub fn showBssInfo() !void {
+    const sz = @as(u32, @intFromPtr(&_ebss)) - @as(u32, @intFromPtr(&_sbss));
+    _ = try getWriter().writer().print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &_ebss, &_sbss, sz });
+}
+
+pub fn showTextInfo() !void {
+    const sz = @as(u32, @intFromPtr(&_etext)) - @as(u32, @intFromPtr(&_stext));
+    _ = try getWriter().writer().print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &_etext, &_stext, sz });
+}
+
+pub fn showHeapInfo() !void {
+    const sz = @as(u32, @intFromPtr(&_heap_size));
+    _ = try getWriter().writer().print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &_heap_start, &_heap_end, sz });
+}
