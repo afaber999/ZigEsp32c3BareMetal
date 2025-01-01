@@ -226,7 +226,7 @@ extern const __stack_bottom: u32;
 extern const _sdata: u32;
 extern const _edata: u32;
 
-extern const _heap_start: u32;
+extern var _heap_start: u32;
 extern const _heap_end: u32;
 extern const _heap_size: u32;
 
@@ -239,14 +239,13 @@ export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
         \\.option pop
     );
 
+    @setRuntimeSafety(false);
     const bss_len = @intFromPtr(&_ebss) - @intFromPtr(&_sbss);
 
     if (bss_len > 0) {
-        @setRuntimeSafety(false);
         const bss = @as([*]volatile u32, @ptrCast(&_sbss))[0..bss_len];
         @memset(bss, 0x00000000);
     }
-
     asm volatile ("jal zero, _c3Start");
 }
 
@@ -259,17 +258,15 @@ pub fn ebss() [*]const u32 {
 }
 
 //var c3Allocator: std.heap.FixedBufferAllocator = null;
-var c3Allocator = std.heap.FixedBufferAllocator.init(&_ebss);
+var c3Allocator: ?std.heap.FixedBufferAllocator = null;
 
-pub fn heapAllocatory() std.mem.Allocator {
-
-    // if c3Allocator == undefined {
-    //     const buffer: [4096]u8 = undefined;
-    // }
-    // if (c3Allocator == null) {
-
-    // }
-    return &c3Allocator;
+pub fn heapAllocator() std.mem.Allocator {
+    if (c3Allocator == null) {
+        const heap_len = @intFromPtr(&_heap_end) - @intFromPtr(&_heap_start);
+        const heap_mem = @as([*]u8, @ptrCast(&_heap_start))[0..heap_len];
+        c3Allocator = std.heap.FixedBufferAllocator.init(heap_mem);
+    }
+    return c3Allocator.?.allocator();
 }
 
 pub fn showStackInfo() !void {

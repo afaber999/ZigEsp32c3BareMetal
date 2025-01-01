@@ -59,5 +59,14 @@ pub fn loop() !void {
 
     loops += 1;
 
-    test_data += 0x10;
+    //if ((loop % 5) == 0) {
+    _ = try tw.write("TEST ALLOCATOR \r\n");
+    var allocator = c3.heapAllocator();
+    _ = try tw.write("OK \r\n");
+    var buf = try allocator.alloc(u8, 0x100);
+    defer allocator.free(buf);
+    buf[0] = 0xFF;
+    _ = try tw.print(" ALLOC NEW BUFFER ADDR {any}\r\n", .{buf.ptr});
+    //}
+    //test_data += 0x10;
 }
