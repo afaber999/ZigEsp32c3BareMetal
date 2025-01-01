@@ -1,3 +1,6 @@
 .zig-cache/
 zig-out/
 *1.zig
+dump.txt
+out.txt
+tmp.txt

@@ -143,20 +143,26 @@ pub fn delay_ms(ms: u64) void {
 }
 
 pub const Uart0 = struct {
-    const UART_FIFO_MAX_SIZE = 4;
+    const UART_FIFO_SIZE = 128;
+    const UART_FIFO_HIGH = UART_FIFO_SIZE - 4;
     const FIFO = 0x0;
     const CLKDIV = 0x14;
     const STATUS = 0x1C;
     const CONF0 = 0x20;
     const CONF1 = 0x24;
     const CLKCONF = 0x78;
+    const MEM_CONF = 0x60;
+    const MEM_TX_STATUS = 0x64;
+    const MEM_RX_STATUS = 0x68;
 
     pub inline fn txFifoLen() u32 {
-        return (Reg.uart[STATUS] >> 16) & 127;
+        // 9 bits, max 512 FIFO bytes
+        return (Reg.uart[STATUS / 4] >> 16) & 0x1FF;
     }
 
     pub inline fn rxFifoLen() u32 {
-        return (Reg.uart[STATUS] >> 0) & 127;
+        // 9 bits, max 512 FIFO bytes
+        return (Reg.uart[STATUS / 4] >> 0) & &0x1FF;
     }
 
     pub fn readNonBlocking(c: *u8) bool {
@@ -174,7 +180,7 @@ pub const Uart0 = struct {
     }
 
     pub fn writeNonBlocking(c: u8) bool {
-        if (txFifoLen() >= UART_FIFO_MAX_SIZE) {
+        if (txFifoLen() >= UART_FIFO_HIGH) {
             return false;
         }
         Reg.uart[FIFO] = c;
@@ -293,3 +299,37 @@ pub fn showHeapInfo() !void {
     const sz = @as(u32, @intFromPtr(&_heap_size));
     _ = try getWriter().writer().print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &_heap_start, &_heap_end, sz });
 }
+
+
+// /// The microzig default panic handler. Will disable interrupts and loop endlessly.
+// pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
+//     for (0..100) |_| {
+//         Gpio.write(9, true);
+//         delay_ms(50);
+//         Gpio.write(9, false);
+//         delay_ms(550);
+//     }
+
+//     // utilize logging functions
+//     var writer = getWriter().writer();
+//     _ = writer.print("microzig PANIC: {s}\r\n", .{message}) catch unreachable;
+
+//     {
+//         var index: usize = 0;
+//         var iter = std.debug.StackIterator.init(@returnAddress(), null);
+//         while (iter.next()) |address| : (index += 1) {
+//             if (index == 0) {
+//                 _ = writer.print("stack trace:", .{}) catch unreachable;
+//             }
+//             _ = writer.print("{d: >3}: 0x{X:0>8}", .{ index, address }) catch unreachable;
+//         }
+//     }
+//     if (@import("builtin").mode == .Debug) {
+//         // attach a breakpoint, this might trigger another
+//         // panic internally, so only do that in debug mode.
+//         std.log.info("triggering breakpoint...", .{});
+//         @breakpoint();
+//     }
+
+//     //hang();
+// }

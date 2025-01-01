@@ -27,17 +27,19 @@ pub fn setup() void {
 var loops: u32 = 0;
 var test_data: u32 = 0xBABEFACE;
 
+pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
+    var writer = c3.getWriter().writer();
+    _ = writer.print("PANIC: {s} at {any} \r\n", .{ message, addr }) catch unreachable;
+    @breakpoint();
+    while (true) {}
+}
+
 pub fn loop() !void {
     try c3.showTextInfo();
-    c3.delay_ms(50);
     try c3.showDataInfo();
-    c3.delay_ms(50);
     try c3.showBssInfo();
-    c3.delay_ms(50);
     try c3.showStackInfo();
-    c3.delay_ms(50);
     try c3.showHeapInfo();
-    c3.delay_ms(50);
 
     _ = try tw.write("\r\n");
     for ('A'..'Z') |ch| {
@@ -50,8 +52,7 @@ pub fn loop() !void {
         //Reg.write(Reg.C3_UART, @intCast(ch));
         //c3.Reg.uart[0] = @intCast(ch);
     }
-    _ = try tw.write("-------------------------\r\n");
-    _ = try tw.write("-------------------------\r\n");
+    // _ = try tw.write("-------------------------\r\n");
 
     c3.Gpio.write(PIN, true);
     c3.Gpio.write(PIN, false);
@@ -59,14 +60,18 @@ pub fn loop() !void {
 
     loops += 1;
 
-    //if ((loop % 5) == 0) {
-    _ = try tw.write("TEST ALLOCATOR \r\n");
-    var allocator = c3.heapAllocator();
-    _ = try tw.write("OK \r\n");
-    var buf = try allocator.alloc(u8, 0x100);
-    defer allocator.free(buf);
-    buf[0] = 0xFF;
-    _ = try tw.print(" ALLOC NEW BUFFER ADDR {any}\r\n", .{buf.ptr});
-    //}
-    //test_data += 0x10;
+    //if (loops > 2) @panic("NOOOOONONO");
+    var slc = std.mem.zeroes([3]u8);
+    slc[loops] = 0x00;
+
+    // //if ((loop % 5) == 0) {
+    // _ = try tw.write("TEST ALLOCATOR \r\n");
+    // var allocator = c3.heapAllocator();
+    // _ = try tw.write("OK \r\n");
+    // var buf = try allocator.alloc(u8, 0x100);
+    // defer allocator.free(buf);
+    // buf[0] = 0xFF;
+    // _ = try tw.print(" ALLOC NEW BUFFER ADDR {any}\r\n", .{buf.ptr});
+    // //}
+    // //test_data += 0x10;
 }

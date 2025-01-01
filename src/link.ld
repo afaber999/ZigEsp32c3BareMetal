@@ -1,5 +1,6 @@
 MEMORY {
 	flash (rx): ORIGIN = 0x42000000,  LENGTH = 4M
+  /* split SRAM area (384 kb) into 2 sections, instruction RAM (iram) and data RAM (dram) */
 	iram  (rx): ORIGIN = 0x40380000,  LENGTH = 192k
 	dram  (rw): ORIGIN = 0x3FC80000 + LENGTH(iram), LENGTH = 192k}
 
@@ -45,10 +46,8 @@ SECTIONS {
   . = ALIGN(16);
   PROVIDE(end = .);
   PROVIDE(_end = .);
-
 }
-
-
+/* stack growing down from top of SRAM */
 __stack_top = ORIGIN(dram) + LENGTH(dram);
 __stack_size = 0x400;
 __stack_bottom = __stack_top - __stack_size;
