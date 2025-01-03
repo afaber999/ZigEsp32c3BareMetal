@@ -1,4 +1,13 @@
 const std = @import("std");
+const Uart = @import("Uart.zig");
+
+pub const Uart0 = Uart.Uart0;
+pub const Uart1 = Uart.Uart1;
+
+pub const uart0 = Uart0{};
+pub const uart1 = Uart1{};
+
+pub const logWriter = uart0.writer();
 
 pub fn Bit(comptime x: u5) u32 {
     return 1 << x;
@@ -20,7 +29,7 @@ pub const Reg = struct {
     pub const C3_DEDICATED_GPIO = 0x600cf000;
     pub const C3_WORLD_CNTL = 0x600d0000;
     pub const C3_DPORT_END = 0x600d3FFC;
-    pub const C3_UART = 0x60000000;
+    pub const C3_UART0 = 0x60000000;
     pub const C3_SPI1 = 0x60002000;
     pub const C3_SPI0 = 0x60003000;
     pub const C3_GPIO = 0x60004000;
@@ -49,7 +58,9 @@ pub const Reg = struct {
     pub const C3_AES_XTS = 0x600CC000;
     pub const C3_USB_JTAG = 0x60043000;
 
-    pub const uart = @as([*]volatile u32, @ptrFromInt(C3_UART));
+    pub const uart0 = @as([*]volatile u32, @ptrFromInt(C3_UART0));
+    pub const uart1 = @as([*]volatile u32, @ptrFromInt(C3_UART0));
+
     pub const gpio = @as([*]volatile u32, @ptrFromInt(C3_GPIO));
     pub const io_mux = @as([*]volatile u32, @ptrFromInt(C3_IO_MUX));
     pub const rtcCntl = @as([*]volatile u32, @ptrFromInt(C3_RTCCNTL));
@@ -142,58 +153,6 @@ pub fn delay_ms(ms: u64) void {
     delay_us(ms * 1000);
 }
 
-pub const Uart0 = struct {
-    const UART_FIFO_SIZE = 128;
-    const UART_FIFO_HIGH = UART_FIFO_SIZE - 4;
-    const FIFO = 0x0;
-    const CLKDIV = 0x14;
-    const STATUS = 0x1C;
-    const CONF0 = 0x20;
-    const CONF1 = 0x24;
-    const CLKCONF = 0x78;
-    const MEM_CONF = 0x60;
-    const MEM_TX_STATUS = 0x64;
-    const MEM_RX_STATUS = 0x68;
-
-    pub inline fn txFifoLen() u32 {
-        // 9 bits, max 512 FIFO bytes
-        return (Reg.uart[STATUS / 4] >> 16) & 0x1FF;
-    }
-
-    pub inline fn rxFifoLen() u32 {
-        // 9 bits, max 512 FIFO bytes
-        return (Reg.uart[STATUS / 4] >> 0) & &0x1FF;
-    }
-
-    pub fn readNonBlocking(c: *u8) bool {
-        if (rxFifoLen() == 0) return false;
-        c.* = Reg.uart[FIFO] & 255;
-        return true;
-    }
-
-    pub fn read() u8 {
-        var ret: u8 = 0;
-        while (!readNonBlocking(&ret)) {
-            spin(1);
-        }
-        return ret;
-    }
-
-    pub fn writeNonBlocking(c: u8) bool {
-        if (txFifoLen() >= UART_FIFO_HIGH) {
-            return false;
-        }
-        Reg.uart[FIFO] = c;
-        return true;
-    }
-
-    pub fn write(c: u8) void {
-        while (!writeNonBlocking(c)) {
-            spin(1);
-        }
-    }
-};
-
 // Implement a std.io.Writer backed by uart_write()
 const TermWriter = struct {
     const Writer = std.io.Writer(
@@ -277,29 +236,28 @@ pub fn heapAllocator() std.mem.Allocator {
 
 pub fn showStackInfo() !void {
     const sz = @as(u32, @intFromPtr(&__stack_top)) - @as(u32, @intFromPtr(&__stack_bottom));
-    _ = try getWriter().writer().print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &__stack_top, &__stack_bottom, sz });
+    _ = try logWriter.print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &__stack_top, &__stack_bottom, sz });
 }
 
 pub fn showDataInfo() !void {
     const sz = @as(u32, @intFromPtr(&_edata)) - @as(u32, @intFromPtr(&_sdata));
-    _ = try getWriter().writer().print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &_edata, &_sdata, sz });
+    _ = try logWriter.print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &_edata, &_sdata, sz });
 }
 
 pub fn showBssInfo() !void {
     const sz = @as(u32, @intFromPtr(&_ebss)) - @as(u32, @intFromPtr(&_sbss));
-    _ = try getWriter().writer().print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &_ebss, &_sbss, sz });
+    _ = try logWriter.print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &_ebss, &_sbss, sz });
 }
 
 pub fn showTextInfo() !void {
     const sz = @as(u32, @intFromPtr(&_etext)) - @as(u32, @intFromPtr(&_stext));
-    _ = try getWriter().writer().print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &_etext, &_stext, sz });
+    _ = try logWriter.print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &_etext, &_stext, sz });
 }
 
 pub fn showHeapInfo() !void {
     const sz = @as(u32, @intFromPtr(&_heap_size));
-    _ = try getWriter().writer().print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &_heap_start, &_heap_end, sz });
+    _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &_heap_start, &_heap_end, sz });
 }
-
 
 // /// The microzig default panic handler. Will disable interrupts and loop endlessly.
 // pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {

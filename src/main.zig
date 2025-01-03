@@ -1,6 +1,6 @@
 const std = @import("std");
 const c3 = @import("c3.zig");
-var tw = c3.getWriter().writer();
+var term = c3.uart0.writer();
 
 const PIN = 9;
 
@@ -19,17 +19,18 @@ pub fn setup() void {
     c3.delay_ms(5000);
     c3.Gpio.write(PIN, false);
 
-    for ("Setup completed version 0.000001 test code long string see if it does not miss any characters!\n") |ch| {
-        c3.Uart0.write(@intCast(ch));
-    }
+    c3.logWriter.print("Starting test app v001 \r\n", .{}) catch unreachable;
+
+    // for ("Setup completed version 0.000001 test code long string see if it does not miss any characters!\n") |ch| {
+    //     c3.Uart0.write(@intCast(ch));
+    // }
 }
 
 var loops: u32 = 0;
 var test_data: u32 = 0xBABEFACE;
 
 pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
-    var writer = c3.getWriter().writer();
-    _ = writer.print("PANIC: {s} at {any} \r\n", .{ message, addr }) catch unreachable;
+    c3.logWriter.print("PANIC: {s} at {any} \r\n", .{ message, addr }) catch unreachable;
     @breakpoint();
     while (true) {}
 }
@@ -41,7 +42,7 @@ pub fn loop() !void {
     try c3.showStackInfo();
     try c3.showHeapInfo();
 
-    _ = try tw.write("\r\n");
+    _ = try term.write("\r\n");
     for ('A'..'Z') |ch| {
         c3.Gpio.write(PIN, true);
         c3.delay_ms(50);
