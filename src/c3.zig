@@ -246,3 +246,9 @@ pub fn logFn(
     const up_time = uptime_us();
     logWriter.print(prefix ++ format ++ "\r\n", .{up_time} ++ args) catch {};
 }
+
+pub fn hang() noreturn {
+    while (true) {
+        asm volatile ("wfi");
+    }
+}

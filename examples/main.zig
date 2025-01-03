@@ -36,7 +36,7 @@ var test_data: u32 = 0xBABEFACE;
 pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
     std.log.err("PANIC: {s} at {any} \r\n", .{ message, addr });
     @breakpoint();
-    while (true) {}
+    c3.hang();
 }
 
 pub fn loop() !void {

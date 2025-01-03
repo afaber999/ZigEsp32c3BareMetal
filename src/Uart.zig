@@ -56,12 +56,12 @@ fn Uart(comptime n: usize) type {
 
         pub inline fn rxFifoLen() u32 {
             // 9 bits, max 512 FIFO bytes
-            return (_regs[STATUS / 4] >> 0) & &0x1FF;
+            return (_regs[STATUS / 4] >> 0) & 0x1FF;
         }
 
         pub fn readNonBlocking(c: *u8) bool {
             if (rxFifoLen() == 0) return false;
-            c.* = _regs[FIFO] & 255;
+            c.* = @truncate(_regs[FIFO]);
             return true;
         }
 
