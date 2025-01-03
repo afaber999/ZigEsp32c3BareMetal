@@ -1,8 +1,13 @@
 const std = @import("std");
-const c3 = @import("c3.zig");
+const c3 = @import("c3");
 var term = c3.uart0.writer();
 
 const PIN = 9;
+
+pub const std_options = std.Options{
+    .log_level = std.log.Level.debug,
+    .logFn = c3.logFn,
+};
 
 export fn _c3Start() noreturn {
     c3.wdt_disable();
@@ -20,7 +25,6 @@ pub fn setup() void {
     c3.Gpio.write(PIN, false);
 
     c3.logWriter.print("Starting test app v001 \r\n", .{}) catch unreachable;
-
     // for ("Setup completed version 0.000001 test code long string see if it does not miss any characters!\n") |ch| {
     //     c3.Uart0.write(@intCast(ch));
     // }
@@ -30,12 +34,13 @@ var loops: u32 = 0;
 var test_data: u32 = 0xBABEFACE;
 
 pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
-    c3.logWriter.print("PANIC: {s} at {any} \r\n", .{ message, addr }) catch unreachable;
+    std.log.err("PANIC: {s} at {any} \r\n", .{ message, addr });
     @breakpoint();
     while (true) {}
 }
 
 pub fn loop() !void {
+    std.log.debug("LOGGING FROM STD LOG DEBUG V {}", .{0});
     try c3.showTextInfo();
     try c3.showDataInfo();
     try c3.showBssInfo();

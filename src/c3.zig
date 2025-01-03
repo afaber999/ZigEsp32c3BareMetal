@@ -231,35 +231,18 @@ pub fn showHeapInfo() !void {
     _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &_heap_start, &_heap_end, sz });
 }
 
-// /// The microzig default panic handler. Will disable interrupts and loop endlessly.
-// pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
-//     for (0..100) |_| {
-//         Gpio.write(9, true);
-//         delay_ms(50);
-//         Gpio.write(9, false);
-//         delay_ms(550);
-//     }
-
-//     // utilize logging functions
-//     var writer = getWriter().writer();
-//     _ = writer.print("microzig PANIC: {s}\r\n", .{message}) catch unreachable;
-
-//     {
-//         var index: usize = 0;
-//         var iter = std.debug.StackIterator.init(@returnAddress(), null);
-//         while (iter.next()) |address| : (index += 1) {
-//             if (index == 0) {
-//                 _ = writer.print("stack trace:", .{}) catch unreachable;
-//             }
-//             _ = writer.print("{d: >3}: 0x{X:0>8}", .{ index, address }) catch unreachable;
-//         }
-//     }
-//     if (@import("builtin").mode == .Debug) {
-//         // attach a breakpoint, this might trigger another
-//         // panic internally, so only do that in debug mode.
-//         std.log.info("triggering breakpoint...", .{});
-//         @breakpoint();
-//     }
-
-//     //hang();
-// }
+//std.options.logFn(comptime message_level: log.Level, comptime scope: @TypeOf(.enum_literal), comptime format: []const u8, args: anytype)
+pub fn logFn(
+    comptime level: std.log.Level,
+    comptime scope: @TypeOf(.EnumLiteral),
+    comptime format: []const u8,
+    args: anytype,
+) void {
+    const level_prefix = comptime "[{:0>12}] " ++ level.asText();
+    const prefix = comptime level_prefix ++ switch (scope) {
+        .default => ": ",
+        else => " (" ++ @tagName(scope) ++ "): ",
+    };
+    const up_time = uptime_us();
+    logWriter.print(prefix ++ format ++ "\r\n", .{up_time} ++ args) catch {};
+}
