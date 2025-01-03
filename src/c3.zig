@@ -153,34 +153,6 @@ pub fn delay_ms(ms: u64) void {
     delay_us(ms * 1000);
 }
 
-// Implement a std.io.Writer backed by uart_write()
-const TermWriter = struct {
-    const Writer = std.io.Writer(
-        *TermWriter,
-        error{},
-        write,
-    );
-
-    fn write(
-        self: *TermWriter,
-        data: []const u8,
-    ) error{}!usize {
-        _ = self;
-        for (data) |ch| Uart0.write(ch);
-        return data.len;
-    }
-
-    pub fn writer(self: *TermWriter) Writer {
-        return .{ .context = self };
-    }
-};
-
-var tw = TermWriter{};
-
-pub fn getWriter() *TermWriter {
-    return &tw;
-}
-
 extern const _stext: u32;
 extern const _etext: u32;
 extern var _sbss: u32;
