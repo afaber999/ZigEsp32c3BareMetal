@@ -39,8 +39,56 @@ pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) nor
     c3.hang();
 }
 
+pub fn test_ws2812() void {
+    @setRuntimeSafety(false);
+
+    const wsPin = 8;
+    c3.Gpio.output_enable(wsPin, true);
+    c3.Gpio.output(wsPin);
+    c3.Gpio.write(wsPin, false);
+
+    for (0..8) |_| {
+        c3.Gpio.write(wsPin, true);
+        c3.spin(6);
+        c3.Gpio.write(wsPin, false);
+        c3.spin(2);
+    }
+
+    c3.delay_ms(1000);
+
+    // for (0..24) |_| {
+    //     c3.Gpio.write(wsPin, true);
+    //     c3.spin(2);
+    //     c3.Gpio.write(wsPin, false);
+    //     c3.spin(6);
+    // }
+}
+
+//  // API WS2812
+// static inline void ws2812_show(int pin, const uint8_t *buf, size_t len) {
+// //   unsigned long delays[2] = {2, 6};
+// //   for (size_t i = 0; i < len; i++) {
+// //     for (uint8_t mask = 0x80; mask; mask >>= 1) {
+// //       int i1 = buf[i] & mask ? 1 : 0, i2 = i1 ^ 1;  // This takes some cycles
+// //       gpio_write(pin, 1);
+// //       spin(delays[i1]);
+// //       gpio_write(pin, 0);
+// //       spin(delays[i2]);
+// //     }
+// //   }
+// // }
+
+//     c3.Gpio.write(PIN, true);
+//     c3.delay_ms(300);
+//     c3.Gpio.write(PIN, false);
+//     c3.delay_ms(700);
+// }
+
 pub fn loop() !void {
     std.log.debug("LOGGING FROM STD LOG DEBUG V {}", .{0});
+
+    test_ws2812();
+
     try c3.showTextInfo();
     try c3.showDataInfo();
     try c3.showBssInfo();
@@ -64,11 +112,11 @@ pub fn loop() !void {
     c3.Gpio.write(PIN, false);
     c3.delay_ms(2000);
 
-    loops += 1;
+    // loops += 1;
 
-    //if (loops > 2) @panic("NOOOOONONO");
-    var slc = std.mem.zeroes([3]u8);
-    slc[loops] = 0x00;
+    // //if (loops > 2) @panic("NOOOOONONO");
+    // var slc = std.mem.zeroes([3]u8);
+    // slc[loops] = 0x00;
 
     // //if ((loop % 5) == 0) {
     // _ = try tw.write("TEST ALLOCATOR \r\n");

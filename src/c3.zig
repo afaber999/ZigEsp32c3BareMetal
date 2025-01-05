@@ -67,6 +67,8 @@ pub const Reg = struct {
     pub const timerGroup0 = @as([*]volatile u32, @ptrFromInt(C3_TIMERGROUP0));
     pub const timerGroup1 = @as([*]volatile u32, @ptrFromInt(C3_TIMERGROUP1));
     pub const systimer = @as([*]volatile u32, @ptrFromInt(C3_SYSTIMER));
+    pub const system = @as([*]volatile u32, @ptrFromInt(C3_SYSTEM));
+    pub const ledc = @as([*]volatile u32, @ptrFromInt(C3_LEDC));
 
     pub inline fn setOrClearBit(ptr: *volatile u32, pin: usize, enable: bool) void {
         if (enable) ptr.* |= Bit(pin) else ptr.* &= ~Bit(pin);
@@ -132,14 +134,21 @@ pub inline fn spin(count: u64) void {
 }
 
 pub inline fn systick() u64 {
-    Reg.systimer[1] = Bit(30); // TRM 10.5
+    // system timer runs on 16 MHZ thus 16 ticks per microsecond
+    const SYSTIMER_UNIT0_OP_REG = 0x0004;
+    const SYSTIMER_UNIT0_VALUE_HI_REG = 0x0040;
+    const SYSTIMER_UNIT0_VALUE_LO_REG = 0x0044;
+
+    Reg.systimer[SYSTIMER_UNIT0_OP_REG / 4] = Bit(30); // TRM 10.5, update Unit0
     spin(1);
-    const hi = Reg.systimer[16];
-    const lo = Reg.systimer[17];
+
+    const hi = Reg.systimer[SYSTIMER_UNIT0_VALUE_HI_REG / 4];
+    const lo = Reg.systimer[SYSTIMER_UNIT0_VALUE_LO_REG / 4];
     return (@as(u64, hi) << 32) | @as(u64, lo);
 }
 
 pub inline fn uptime_us() u64 {
+    // convert to microseconds
     return systick() >> 4;
 }
 
@@ -183,6 +192,8 @@ export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
         const bss = @as([*]volatile u32, @ptrCast(&_sbss))[0..bss_len];
         @memset(bss, 0x00000000);
     }
+
+    setCpuClock(160);
     asm volatile ("jal zero, _c3Start");
 }
 
@@ -192,6 +203,21 @@ pub fn sbss() [*]volatile u32 {
 
 pub fn ebss() [*]const u32 {
     return @ptrCast(&_ebss);
+}
+
+pub fn setCpuClock(freqInMhz: usize) void {
+    _ = freqInMhz;
+    // const SYSTEM_CPU_PER_CONF_REG = 0x0008;
+    // const system = Reg.system;
+
+    // // don't force WAIT mode
+    // system[SYSTEM_CPU_PER_CONF_REG/4] &= ~Bit(3);
+
+    // // set CPU clock
+    // system[SYSTEM_CPU_PER_CONF_REG/4] |= 0b11;
+
+    // pub const systimer = @as([*]volatile u32, @ptrFromInt(C3_SYSTIMER));
+
 }
 
 //var c3Allocator: std.heap.FixedBufferAllocator = null;

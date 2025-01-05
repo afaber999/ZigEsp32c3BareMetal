@@ -22,7 +22,7 @@ pub fn build(b: *std.Build) void {
     const c3ModuleName = "c3";
     const c3Module = b.addModule(c3ModuleName, .{ .root_source_file = b.path("src/c3.zig") });
 
-    const Examples = [_][]const u8{ "blink", "main", "uart_echo", "logger", "panic" };
+    const Examples = [_][]const u8{ "blink", "main", "uart_echo", "logger", "panic", "sysinfo", "monitor" };
 
     inline for (Examples) |exampleName| {
         const example = b.addExecutable(.{

@@ -39,6 +39,7 @@ fn Uart(comptime n: usize) type {
         const MEM_RX_STATUS = 0x68;
 
         pub const Writer = std.io.GenericWriter(Self, TransmitError, generic_writer_fn);
+
         pub fn writer(self: Self) Writer {
             return .{ .context = self };
         }
