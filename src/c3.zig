@@ -193,7 +193,7 @@ export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
         @memset(bss, 0x00000000);
     }
 
-    setCpuClock(160);
+    //setCpuClock(160);
     asm volatile ("jal zero, _c3Start");
 }
 
