@@ -1,5 +1,6 @@
 const std = @import("std");
 const Uart = @import("Uart.zig");
+pub const Debug = @import("Debug.zig");
 
 pub const Uart0 = Uart.Uart0;
 pub const Uart1 = Uart.Uart1;
@@ -189,7 +190,7 @@ pub const sections = struct {
     pub extern const _c3_global_pointer: u8;
 };
 
-export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
+export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
     asm volatile ("la sp, _c3_stack_top");
     asm volatile (
         \\.option push
@@ -220,7 +221,6 @@ export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
             @memcpy(data_start[0..data_len], data_src[0..data_len]);
         }
     }
-
     //setCpuClock(160);
     asm volatile ("jal zero, _c3Start");
 }

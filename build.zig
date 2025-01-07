@@ -30,9 +30,10 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("examples/" ++ exampleName ++ ".zig"),
             .target = target,
             .optimize = .ReleaseSafe,
-            //.optimize = .ReleaseSafe,
+            //.optimize = .ReleaseSmall,
         });
 
+        //example.root_module.strip = false;
         example.root_module.strip = false;
         example.root_module.addImport(c3ModuleName, c3Module);
 
