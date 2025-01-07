@@ -1,5 +1,6 @@
 const std = @import("std");
 const Uart = @import("Uart.zig");
+pub const Debug = @import("Debug.zig");
 
 pub const Uart0 = Uart.Uart0;
 pub const Uart1 = Uart.Uart1;
@@ -67,6 +68,8 @@ pub const Reg = struct {
     pub const timerGroup0 = @as([*]volatile u32, @ptrFromInt(C3_TIMERGROUP0));
     pub const timerGroup1 = @as([*]volatile u32, @ptrFromInt(C3_TIMERGROUP1));
     pub const systimer = @as([*]volatile u32, @ptrFromInt(C3_SYSTIMER));
+    pub const system = @as([*]volatile u32, @ptrFromInt(C3_SYSTEM));
+    pub const ledc = @as([*]volatile u32, @ptrFromInt(C3_LEDC));
 
     pub inline fn setOrClearBit(ptr: *volatile u32, pin: usize, enable: bool) void {
         if (enable) ptr.* |= Bit(pin) else ptr.* &= ~Bit(pin);
@@ -132,14 +135,21 @@ pub inline fn spin(count: u64) void {
 }
 
 pub inline fn systick() u64 {
-    Reg.systimer[1] = Bit(30); // TRM 10.5
+    // system timer runs on 16 MHZ thus 16 ticks per microsecond
+    const SYSTIMER_UNIT0_OP_REG = 0x0004;
+    const SYSTIMER_UNIT0_VALUE_HI_REG = 0x0040;
+    const SYSTIMER_UNIT0_VALUE_LO_REG = 0x0044;
+
+    Reg.systimer[SYSTIMER_UNIT0_OP_REG / 4] = Bit(30); // TRM 10.5, update Unit0
     spin(1);
-    const hi = Reg.systimer[16];
-    const lo = Reg.systimer[17];
+
+    const hi = Reg.systimer[SYSTIMER_UNIT0_VALUE_HI_REG / 4];
+    const lo = Reg.systimer[SYSTIMER_UNIT0_VALUE_LO_REG / 4];
     return (@as(u64, hi) << 32) | @as(u64, lo);
 }
 
 pub inline fn uptime_us() u64 {
+    // convert to microseconds
     return systick() >> 4;
 }
 
@@ -153,45 +163,89 @@ pub fn delay_ms(ms: u64) void {
     delay_us(ms * 1000);
 }
 
-extern const _stext: u32;
-extern const _etext: u32;
-extern var _sbss: u32;
-extern const _ebss: u32;
-extern const __stack_top: u32;
-extern const __stack_bottom: u32;
+/// Contains references to the linker .data and .bss sections, also
+/// contains the initial load address for .data if it is in flash.
+pub const sections = struct {
+    // it looks odd to just use a u8 here, but in C it's common to use a
+    // char when linking these values from the linkerscript. What's
+    // important is the addresses of these values.
+    pub extern var _c3_text_start: u8;
+    pub extern var _c3_text_end: u8;
 
-extern const _sdata: u32;
-extern const _edata: u32;
+    pub extern var _c3_stack_top: u8;
+    pub extern var _c3_stack_bottom: u8;
+    pub extern var _c3_stack_size: u8;
 
-extern var _heap_start: u32;
-extern const _heap_end: u32;
-extern const _heap_size: u32;
+    pub extern var _c3_heap_start: u8;
+    pub extern var _c3_heap_end: u8;
+    pub extern var _c3_heap_size: u8;
 
-export fn _start() linksection(".text.start") callconv(.Naked) noreturn {
-    asm volatile ("la sp, __stack_top");
+    pub extern var _c3_data_start: u8;
+    pub extern var _c3_data_end: u8;
+
+    pub extern var _c3_bss_start: u8;
+    pub extern var _c3_bss_end: u8;
+
+    pub extern const _c3_data_load_start: u8;
+    pub extern const _c3_global_pointer: u8;
+};
+
+export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
+    asm volatile ("la sp, _c3_stack_top");
     asm volatile (
         \\.option push
         \\.option norelax
-        \\la gp, __global_pointer$
+        \\la gp, _c3_global_pointer
         \\.option pop
     );
 
     @setRuntimeSafety(false);
-    const bss_len = @intFromPtr(&_ebss) - @intFromPtr(&_sbss);
 
-    if (bss_len > 0) {
-        const bss = @as([*]volatile u32, @ptrCast(&_sbss))[0..bss_len];
-        @memset(bss, 0x00000000);
+    // fill .bss with zeroes
+    {
+        const bss_start: [*]u8 = @ptrCast(&sections._c3_bss_start);
+        const bss_end: [*]u8 = @ptrCast(&sections._c3_bss_end);
+        const bss_len = @intFromPtr(bss_end) - @intFromPtr(bss_start);
+
+        @memset(bss_start[0..bss_len], 0);
     }
+
+    // load .data from flash
+    {
+        const data_start: [*]u8 = @ptrCast(&sections._c3_data_start);
+        const data_end: [*]u8 = @ptrCast(&sections._c3_data_end);
+        const data_len = @intFromPtr(data_end) - @intFromPtr(data_start);
+        const data_src: [*]const u8 = @ptrCast(&sections._c3_data_load_start);
+
+        if ((data_start != data_src) and (data_len > 0)) {
+            @memcpy(data_start[0..data_len], data_src[0..data_len]);
+        }
+    }
+    //setCpuClock(160);
     asm volatile ("jal zero, _c3Start");
 }
 
 pub fn sbss() [*]volatile u32 {
-    return @ptrCast(&_sbss);
+    return @ptrCast(&sections._c3_bss_start);
 }
 
 pub fn ebss() [*]const u32 {
-    return @ptrCast(&_ebss);
+    return @ptrCast(&sections._c3_bss_end);
+}
+
+pub fn setCpuClock(freqInMhz: usize) void {
+    _ = freqInMhz;
+    // const SYSTEM_CPU_PER_CONF_REG = 0x0008;
+    // const system = Reg.system;
+
+    // // don't force WAIT mode
+    // system[SYSTEM_CPU_PER_CONF_REG/4] &= ~Bit(3);
+
+    // // set CPU clock
+    // system[SYSTEM_CPU_PER_CONF_REG/4] |= 0b11;
+
+    // pub const systimer = @as([*]volatile u32, @ptrFromInt(C3_SYSTIMER));
+
 }
 
 //var c3Allocator: std.heap.FixedBufferAllocator = null;
@@ -199,36 +253,36 @@ var c3Allocator: ?std.heap.FixedBufferAllocator = null;
 
 pub fn heapAllocator() std.mem.Allocator {
     if (c3Allocator == null) {
-        const heap_len = @intFromPtr(&_heap_end) - @intFromPtr(&_heap_start);
-        const heap_mem = @as([*]u8, @ptrCast(&_heap_start))[0..heap_len];
+        const heap_len = @intFromPtr(&sections._c3_heap_end) - @intFromPtr(&sections._c3_heap_start);
+        const heap_mem = @as([*]u8, @ptrCast(&sections.sections._c3_heap_start))[0..heap_len];
         c3Allocator = std.heap.FixedBufferAllocator.init(heap_mem);
     }
     return c3Allocator.?.allocator();
 }
 
 pub fn showStackInfo() !void {
-    const sz = @as(u32, @intFromPtr(&__stack_top)) - @as(u32, @intFromPtr(&__stack_bottom));
-    _ = try logWriter.print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &__stack_top, &__stack_bottom, sz });
+    const sz = @as(u32, @intFromPtr(&sections._c3_stack_top)) - @as(u32, @intFromPtr(&sections._c3_stack_bottom));
+    _ = try logWriter.print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_stack_top, &sections._c3_stack_bottom, sz });
 }
 
 pub fn showDataInfo() !void {
-    const sz = @as(u32, @intFromPtr(&_edata)) - @as(u32, @intFromPtr(&_sdata));
-    _ = try logWriter.print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &_edata, &_sdata, sz });
+    const sz = @as(u32, @intFromPtr(&sections._c3_data_end)) - @as(u32, @intFromPtr(&sections._c3_data_start));
+    _ = try logWriter.print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_data_end, &sections._c3_data_start, sz });
 }
 
 pub fn showBssInfo() !void {
-    const sz = @as(u32, @intFromPtr(&_ebss)) - @as(u32, @intFromPtr(&_sbss));
-    _ = try logWriter.print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &_ebss, &_sbss, sz });
+    const sz = @as(u32, @intFromPtr(&sections._c3_bss_end)) - @as(u32, @intFromPtr(&sections._c3_bss_start));
+    _ = try logWriter.print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_bss_end, &sections._c3_bss_start, sz });
 }
 
 pub fn showTextInfo() !void {
-    const sz = @as(u32, @intFromPtr(&_etext)) - @as(u32, @intFromPtr(&_stext));
-    _ = try logWriter.print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &_etext, &_stext, sz });
+    const sz = @as(u32, @intFromPtr(&sections._c3_text_end)) - @as(u32, @intFromPtr(&sections._c3_text_start));
+    _ = try logWriter.print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_text_end, &sections._c3_text_start, sz });
 }
 
 pub fn showHeapInfo() !void {
-    const sz = @as(u32, @intFromPtr(&_heap_size));
-    _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &_heap_start, &_heap_end, sz });
+    const sz = @as(u32, @intFromPtr(&sections._c3_heap_size));
+    _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_heap_start, &sections._c3_heap_end, sz });
 }
 
 //std.options.logFn(comptime message_level: log.Level, comptime scope: @TypeOf(.enum_literal), comptime format: []const u8, args: anytype)
