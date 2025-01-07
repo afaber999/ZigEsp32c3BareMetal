@@ -30,9 +30,10 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("examples/" ++ exampleName ++ ".zig"),
             .target = target,
             .optimize = .ReleaseSafe,
-            //.optimize = .ReleaseSafe,
+            //.optimize = .ReleaseSmall,
         });
 
+        //example.root_module.strip = false;
         example.root_module.strip = false;
         example.root_module.addImport(c3ModuleName, c3Module);
 
@@ -41,6 +42,16 @@ pub fn build(b: *std.Build) void {
         example.setLinkerScriptPath(b.path("src/link.ld"));
 
         b.installArtifact(example);
+
+        // Copy the bin out of the elf
+        const bin = b.addObjCopy(example.getEmittedBin(), .{
+            .format = .bin,
+        });
+        bin.step.dependOn(&example.step);
+
+        // Copy the bin to the output directory
+        const copy_bin = b.addInstallBinFile(bin.getOutput(), exampleName ++ ".bin");
+        b.default_step.dependOn(&copy_bin.step);
 
         // add run/flash step for each sample
         const flash_cmd = b.addSystemCommand(&[_][]const u8{
