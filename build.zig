@@ -2,6 +2,7 @@ const std = @import("std");
 const CrossTarget = @import("std").zig.CrossTarget;
 const Target = @import("std").Target;
 const Feature = @import("std").Target.Cpu.Feature;
+const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) void {
     const features = Target.riscv.Feature;
@@ -53,7 +54,7 @@ pub fn build(b: *std.Build) void {
         const copy_bin = b.addInstallBinFile(bin.getOutput(), exampleName ++ ".bin");
         b.default_step.dependOn(&copy_bin.step);
 
-        const flash_cmd_script = switch (target.result.os.tag) {
+        const flash_cmd_script = switch (builtin.os.tag) {
             .windows => "./flash.cmd",
             else => "./flash.sh",
         };

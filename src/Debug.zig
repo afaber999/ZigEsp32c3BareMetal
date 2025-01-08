@@ -29,3 +29,34 @@ pub fn printhex_u8(val: u8) void {
     print_nibble(val & 0xF);
 }
 
+// dumping memory, when using to dump flash data, use drom address area
+// in order to allow byte alignment memory access
+pub fn dump_mem(ptr: [*]const u8, len: usize) void {
+    var i: usize = 0;
+    while (i < len) {
+        const addr = @as(u32, @intFromPtr(&ptr[i]));
+        printhex_u32(addr);
+        uart[0] = ' ';
+
+        for (0..16) |j| {
+            printhex_u8(ptr[i + j]);
+            uart[0] = ' ';
+        }
+        uart[0] = ' ';
+        uart[0] = '-';
+        uart[0] = ' ';
+
+        c3.spin(50000);
+
+        for (0..16) |j| {
+            const v = ptr[i + j];
+            if (v >= 32 and v < 127) {
+                uart[0] = v;
+            } else {
+                uart[0] = '.';
+            }
+        }
+        i += 16;
+        print_new_line();
+    }
+}

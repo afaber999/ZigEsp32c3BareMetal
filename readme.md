@@ -1,8 +1,9 @@
 # Zig Baremetal Library for ESP32-C3 (RISC-V)
 
-Welcome to my experimental **Zig baremetal library** for the **ESP32-C3**, based on the **RISC-V** architecture. This library is a personal project created for experimentation and learning, providing a minimalistic environment for running baremetal applications on the ESP32-C3 without relying on an RTOS like ESP-IDF. 
+Welcome to the experimental **Zig baremetal library** for the **ESP32-C3**, based on the **RISC-V** architecture. This library is a personal project created for experimentation and learning, providing a minimalistic environment for running baremetal applications on the ESP32-C3 microcontroller without relying on an RTOS and SDKs (like FreeTos andESP-IDF). 
 
-Although still in its early stages, the library includes several core features and sample programs, making it a great starting point for exploring the ESP32-C3 and the RISC-V architecture using Zig.
+Although still in its early stages, the library includes some core features and sample programs that can run on an ESP32 C3 microcontroller, 
+making it a great starting point for exploring the ESP32-C3 and the RISC-V architecture using Zig.
 
 ---
 
@@ -19,14 +20,17 @@ Although still in its early stages, the library includes several core features a
   - UART echo.
   - Logging with different verbosity levels.
   - Panic handling demonstration.
+  - show (memory) system information
+
 
 ---
 
 ## Getting Started
 
+
 ### Prerequisites
 
-- **Zig**: Install the Zig compiler (v0.10.0 or later recommended).
+- **Zig**: Install the Zig compiler (v0.13.0).
   - [Download Zig](https://ziglang.org/download/)
 - **ESP32-C3 Development Board**: Ensure your hardware is ready for programming.
 
@@ -37,12 +41,19 @@ Although still in its early stages, the library includes several core features a
    git clone https://github.com/yourusername/zig-esp32c3-baremetal.git
    cd zig-esp32c3-baremetal
 
-2. run zig_build to compile all examples
+2. run zig_build to compile everything
 3. flash an example project using zig build run_xxxxx where xxxx is the sample name, following samples are included
-    blink
-    panic
-    logger
-    uart_echo
+    zig build flash_blink
+    zig build flash_logger
+    zig build flash_monitor
+    zig build flash_main
+    zig build flash_panic
+    zig build flash_sysinfo
+    zig build flash_uart_echo
+
+In order to flash, the esptool has needs to be installed on the system.
+On windows download the esptool.exe and is in the search path
+On linux system the build script assumes that the esptool python tool is installed
 
 
 # my notes, TODO remove, please ignore
