@@ -4,3 +4,4 @@ zig-out/
 dump.txt
 out.txt
 tmp.txt
+esptool.exe

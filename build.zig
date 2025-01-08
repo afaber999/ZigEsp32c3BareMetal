@@ -53,9 +53,14 @@ pub fn build(b: *std.Build) void {
         const copy_bin = b.addInstallBinFile(bin.getOutput(), exampleName ++ ".bin");
         b.default_step.dependOn(&copy_bin.step);
 
+        const flash_cmd_script = switch (target.result.os.tag) {
+            .windows => "./flash.cmd",
+            else => "./flash.sh",
+        };
+
         // add run/flash step for each sample
         const flash_cmd = b.addSystemCommand(&[_][]const u8{
-            "flash.cmd",
+            flash_cmd_script,
             exampleName,
         });
 
