@@ -1,6 +1,9 @@
 const std = @import("std");
 const Uart = @import("Uart.zig");
 pub const Debug = @import("Debug.zig");
+pub const Riscv = @import("Riscv.zig");
+pub const System = @import("System.zig");
+pub const Interrupt = @import("Interrupt.zig");
 
 pub const Uart0 = Uart.Uart0;
 pub const Uart1 = Uart.Uart1;
@@ -69,6 +72,7 @@ pub const Reg = struct {
     pub const timerGroup1 = @as([*]volatile u32, @ptrFromInt(C3_TIMERGROUP1));
     pub const systimer = @as([*]volatile u32, @ptrFromInt(C3_SYSTIMER));
     pub const system = @as([*]volatile u32, @ptrFromInt(C3_SYSTEM));
+    pub const interrupt = @as([*]volatile u32, @ptrFromInt(C3_INTERRUPT));
     pub const ledc = @as([*]volatile u32, @ptrFromInt(C3_LEDC));
 
     pub inline fn setOrClearBit(ptr: *volatile u32, pin: usize, enable: bool) void {
@@ -116,7 +120,7 @@ pub const Gpio = struct {
     }
 
     pub inline fn input(pin: usize) void {
-        output_enable(pin, 0); // Disable output
+        output_enable(pin, false); // Disable output
         Reg.io_mux[1 + pin] = Bit(9) | Bit(8); // Enable pull-up
     }
 
@@ -188,6 +192,9 @@ pub const sections = struct {
 
     pub extern const _c3_data_load_start: u8;
     pub extern const _c3_global_pointer: u8;
+
+    pub extern const _c3_interrupt_vectors_size: u8;
+    pub extern const _c3_interrupt_vectors: u8;
 };
 
 export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
@@ -220,6 +227,8 @@ export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
             @memcpy(data_start[0..data_len], data_src[0..data_len]);
         }
     }
+
+    Riscv.w_mtvec(@intFromPtr(&sections._c3_interrupt_vectors));
     //setCpuClock(160);
     asm volatile ("jal zero, _c3Start");
 }
@@ -284,6 +293,12 @@ pub fn showHeapInfo() !void {
     _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_heap_start, &sections._c3_heap_end, sz });
 }
 
+pub fn showInterruptInfo() !void {
+    const sz = @as(u32, @intFromPtr(&sections._c3_interrupt_vectors_size));
+    const mtvec_addr = Riscv.r_mtvec();
+    _ = try logWriter.print("INTERRUPT VECOTR TABLE AT: {any} size: 0x{x} mtvec set to: 0x{x} \r\n", .{ &sections._c3_interrupt_vectors, sz, mtvec_addr });
+}
+
 //std.options.logFn(comptime message_level: log.Level, comptime scope: @TypeOf(.enum_literal), comptime format: []const u8, args: anytype)
 pub fn logFn(
     comptime level: std.log.Level,
@@ -303,5 +318,19 @@ pub fn logFn(
 pub fn hang() noreturn {
     while (true) {
         asm volatile ("wfi");
+    }
+}
+
+pub fn setInterruptVector(id: usize, handler: fn () callconv(.C) noreturn) void {
+    var vector_table = @as([*]volatile u32, @constCast(@ptrCast(@alignCast(&sections._c3_interrupt_vectors))));
+    const hu32 = @as(u32, @intFromPtr(&handler));
+    //const vector_table = @as([*]volatile u32, @ptrFromInt(&sections._c3_interrupt_vectors));
+    vector_table[id] = hu32;
+}
+
+pub fn showInterruptVectors() !void {
+    const vector_table = @as([*]const u32, @ptrCast(@alignCast(&sections._c3_interrupt_vectors)));
+    for (0..31) |i| {
+        _ = try logWriter.print("INTERRUPT VECTOR: {d} -> 0x{x}\r\n", .{ i, vector_table[i] });
     }
 }

@@ -69,11 +69,16 @@ SECTIONS
 
   _end = .; PROVIDE (end = .);
 
-  /* Stack */
+  /* Place interrupt vector table at mem upper */
+  /* size and alignment is 256 byte (0x100)    */
+  PROVIDE(_c3_interrupt_vectors_size = 0x100);
+  PROVIDE(_c3_interrupt_vectors = ORIGIN(ram0) + LENGTH(ram0) - _c3_interrupt_vectors_size);
+
+  /* Stack, place just under the interrupt vector table */
   .stack  (NOLOAD) :
   {
     _c3_stack_bottom = .;
-    _c3_stack_top = ORIGIN(ram0) + LENGTH(ram0);
+    _c3_stack_top = _c3_interrupt_vectors;
     _c3_stack_size_min = 0x4000;
     ASSERT(_c3_stack_bottom + _c3_stack_size_min < _c3_stack_top, "Error: no space for stack");
   }

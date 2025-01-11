@@ -15,6 +15,8 @@ pub fn main() !void {
         try c3.showBssInfo();
         try c3.showStackInfo();
         try c3.showHeapInfo();
+        try c3.showInterruptInfo();
+        try c3.showInterruptVectors();
         c3.delay_ms(1000);
     }
 }

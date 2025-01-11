@@ -56,7 +56,7 @@ const Ledc = struct {
     }
 };
 
-var ledc = undefined,
+var ledc = undefined;
 
 var LEDC_APB_CLK_SEL = c3.Reg.system[0x3C / 4];
 
@@ -93,18 +93,15 @@ pub fn setup() void {
     // set APB_CLK (80 Mhz)
     // bit 01 : 1: APB_CLK; 2: RC_FAST_CLK; 3: XTAL_CLK. (R/W)
     // bit 31 : clock enable
-    ledc[Ledc.LEDC_CONF_REG / 4] = 0x01 | Bit(31);
+    ledc[Ledc.LEDC_CONF_REG / 4] = 0x01 | c3.Bit(31);
 
     // configure timer 0
     var reg = 0x00;
     reg |= (0b1111) << 0; // DUTY_RES
     reg |= (0b00000000) << 4; // CLK_DIV_B
     reg |= (0b1111111111) << 11; // CLK_DIV_A
-    reg |= (0b1) << 25;// PARA_UP
+    reg |= (0b1) << 25; // PARA_UP
     ledc[Ledc.TIMER0_CONF_REG / 4] = reg;
-
-
-
 }
 
 pub fn loop() !void {
