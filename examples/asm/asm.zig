@@ -1,3 +1,8 @@
+// This is a simple example of interfacing Zig with assembly.
+// The assembly code is in the file `asm.S`
+// The assembly code is a simple function that adds two numbers and returns the result.
+// In addition, the assembly code also has function that toggles a LED (9) on and off.
+// And demonstrates how to share a global variable between asm and zig
 const std = @import("std");
 const c3 = @import("c3");
 
@@ -7,7 +12,6 @@ extern fn led_off() callconv(.C) void;
 extern fn inc_glob_counts() callconv(.C) void;
 
 extern var glob_counts: i32;
-
 
 // this requires a LED is connect to GPIO pin 9
 // note: this is not the default WS2812 LED that is a DEVKIT board
@@ -26,8 +30,7 @@ pub fn main() !void {
 
     while (true) {
         const result = add_numbers(10, 20);
-        try c3.logWriter.print("Result: {}\n", .{result});
-        c3.logWriter.print("ASM TESTER, glob count: {d} \r\n", .{glob_counts}) catch unreachable;
+        c3.logWriter.print("ASM TESTER, glob count: {d}, add result - {d} \r\n", .{ glob_counts, result }) catch unreachable;
 
         led_on();
         c3.delay_ms(300);

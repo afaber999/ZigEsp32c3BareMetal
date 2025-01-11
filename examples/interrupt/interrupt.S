@@ -10,6 +10,12 @@ isr_handler:
     sw t0, 0(sp)         # Save t0 to stack
     sw t1, 4(sp)         # Save t1 to stack
 
+    # LED ON
+    lui	t0,0x60004
+    lw	t1,4(t0) # 60004004 <_c3_data_load_start+0x1e003f24>
+    or	t1,t1,512
+    sw	t1,4(t0)
+
     # Load the address 0x600C002B
     lui t0, 0x600C0        # Load upper 20 bits of 0x600C0000
     addi t0, t0, 0x02B     # Add the lower 12 bits (0x02B)
