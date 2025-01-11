@@ -104,6 +104,10 @@ pub inline fn clearPendingInterrupt(interrupt: u5) void {
     _regs[CORE0_CPU_INT_CLEAR / 4] = c3.Bit(interrupt);
 }
 
+pub inline fn clearAllPendingInterrupts() void {
+    _regs[CORE0_CPU_INT_CLEAR / 4] = 0xFFFFFFFF;
+}
+
 pub inline fn getIntrStatus0() u32 {
     return _regs[CORE0_INTR_STATUS_0 / 4];
 }
