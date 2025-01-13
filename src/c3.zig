@@ -3,6 +3,7 @@ const Uart = @import("Uart.zig");
 pub const Debug = @import("Debug.zig");
 pub const Riscv = @import("Riscv.zig");
 pub const System = @import("System.zig");
+pub const SysTimer = @import("SysTimer.zig");
 pub const Interrupt = @import("Interrupt.zig");
 
 pub const Uart0 = Uart.Uart0;
@@ -75,8 +76,15 @@ pub const Reg = struct {
     pub const interrupt = @as([*]volatile u32, @ptrFromInt(C3_INTERRUPT));
     pub const ledc = @as([*]volatile u32, @ptrFromInt(C3_LEDC));
 
-    pub inline fn setOrClearBit(ptr: *volatile u32, pin: usize, enable: bool) void {
-        if (enable) ptr.* |= Bit(pin) else ptr.* &= ~Bit(pin);
+    pub inline fn setOrClearBit(ptr: *volatile u32, bit: usize, enable: bool) void {
+        if (enable) ptr.* |= Bit(bit) else ptr.* &= ~Bit(bit);
+    }
+
+    pub inline fn setBit(ptr: *volatile u32, bit: usize) void {
+        ptr.* |= Bit(bit);
+    }
+    pub inline fn clearBit(ptr: *volatile u32, bit: usize) void {
+        ptr.* &= ~Bit(bit);
     }
 };
 
@@ -130,6 +138,29 @@ pub const Gpio = struct {
     }
 };
 
+pub const Timer0 = struct {
+    const _regs: [*]volatile u32 = Reg.timerGroup0;
+
+    pub fn setLoadValue(value: u32) void {
+        _regs[0x00 / 4] = value;
+    }
+
+    pub fn enableInterrupt() void {
+        // Enable the interrupt for Timer0        const int_enable_reg = @intToPtr(*volatile u32, 0x6001F004);
+        _regs[0x04 / 4] |= 0x1;
+    }
+
+    pub fn start() void {
+        // Start Timer0
+        _regs[0x08 / 4] |= 0x1;
+    }
+
+    pub fn clearInterrupt() void {
+        // Clear the interrupt for Timer0
+        _regs[0x0C / 4] |= 0x1;
+    }
+};
+
 pub inline fn spin(count: u64) void {
     var left = count;
     while (left > 0) {
@@ -139,17 +170,7 @@ pub inline fn spin(count: u64) void {
 }
 
 pub inline fn systick() u64 {
-    // system timer runs on 16 MHZ thus 16 ticks per microsecond
-    const SYSTIMER_UNIT0_OP_REG = 0x0004;
-    const SYSTIMER_UNIT0_VALUE_HI_REG = 0x0040;
-    const SYSTIMER_UNIT0_VALUE_LO_REG = 0x0044;
-
-    Reg.systimer[SYSTIMER_UNIT0_OP_REG / 4] = Bit(30); // TRM 10.5, update Unit0
-    spin(1);
-
-    const hi = Reg.systimer[SYSTIMER_UNIT0_VALUE_HI_REG / 4];
-    const lo = Reg.systimer[SYSTIMER_UNIT0_VALUE_LO_REG / 4];
-    return (@as(u64, hi) << 32) | @as(u64, lo);
+    return SysTimer.readUnit0();
 }
 
 pub inline fn uptime_us() u64 {

@@ -66,3 +66,8 @@ esptool.exe  write_flash 0 ./zig-out/bin/zfirmware.bin
 
 //esptool.exe --chip esp32c3 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB $(PROG).elf
 $ riscv64-unknown-elf-objdump.exe  -t -h ./zig-out/bin/zfirmware.elf 
+
+
+# debugging:
+
+openocd_esp/bin/openocd -c "gdb_port 50007" -c "tcl_port 50008" -f "openocd_esp/support/openocd-helpers.tcl" -f board/esp32c3-builtin.cfg -d3
