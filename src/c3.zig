@@ -216,6 +216,8 @@ pub const sections = struct {
 
     pub extern const _c3_interrupt_vectors_size: u8;
     pub extern const _c3_interrupt_vectors: u8;
+
+    pub extern const _vector_table: u8;
 };
 
 export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
@@ -350,7 +352,9 @@ pub fn setInterruptVector(id: usize, handler: fn () callconv(.C) noreturn) void 
 }
 
 pub fn showInterruptVectors() !void {
-    const vector_table = @as([*]const u32, @ptrCast(@alignCast(&sections._c3_interrupt_vectors)));
+    const addr = Riscv.r_mtvec();
+    const vector_table = @as([*]const u32, @ptrFromInt(addr & 0xFFFFFF00));
+    _ = try logWriter.print("Interrupt vector table @ 0x{any}\r\n", .{vector_table});
     for (0..31) |i| {
         _ = try logWriter.print("INTERRUPT VECTOR: {d} -> 0x{x}\r\n", .{ i, vector_table[i] });
     }
