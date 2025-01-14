@@ -4,9 +4,6 @@ const c3 = @import("c3.zig");
 pub const Uart0 = Uart(0);
 pub const Uart1 = Uart(1);
 
-pub const TransmitError = error{
-    Timeout,
-};
 
 pub const ReceiveError = error{
     OverrunError,
@@ -38,13 +35,13 @@ fn Uart(comptime n: usize) type {
         const MEM_TX_STATUS = 0x64;
         const MEM_RX_STATUS = 0x68;
 
-        pub const Writer = std.io.GenericWriter(Self, TransmitError, generic_writer_fn);
+        pub const Writer = std.io.GenericWriter(Self, error{}, generic_writer_fn);
 
         pub fn writer(self: Self) Writer {
             return .{ .context = self };
         }
 
-        fn generic_writer_fn(self: Self, data: []const u8) TransmitError!usize {
+        fn generic_writer_fn(self: Self, data: []const u8) error{}!usize {
             _ = self;
             for (data) |ch| Self.write(ch);
             return data.len;

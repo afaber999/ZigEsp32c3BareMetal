@@ -8,7 +8,10 @@ extern fn isr_handler() callconv(.C) noreturn;
 extern fn sub_handler() callconv(.C) void;
 extern var num_isrs: i32;
 
+extern fn set_vector_table() callconv(.C) void;
+
 export fn _c3Start() noreturn {
+    set_vector_table();
     c3.wdt_disable();
     main() catch {};
     c3.hang();

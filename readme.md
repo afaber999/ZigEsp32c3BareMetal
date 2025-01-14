@@ -71,3 +71,19 @@ $ riscv64-unknown-elf-objdump.exe  -t -h ./zig-out/bin/zfirmware.elf
 # debugging:
 
 openocd_esp/bin/openocd -c "gdb_port 50007" -c "tcl_port 50008" -f "openocd_esp/support/openocd-helpers.tcl" -f board/esp32c3-builtin.cfg -d3
+
+
+# CREDITS:
+Inspiration form the following project:
+
+MicroZig :
+https://github.com/ringtailsoftware/zig-minirv32
+
+MicroZig : https://github.com/ZigEmbeddedGroup/microzig
+MDK : https://github.com/cpq/mdk
+RISC-V-Devkit-for-ESP32C3: https://github.com/AlexManoJAM/RISC-V-Devkit-for-ESP32C3
+Direct Boot example: https://github.com/espressif/esp32c3-direct-boot-example
+esp32c3_baremetal: https://github.com/skagus/esp32c3_baremetal/tree/main/esp32c3
+
+c3 
+esptool

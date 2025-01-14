@@ -13,7 +13,6 @@ export fn _c3Start() noreturn {
 }
 
 pub fn main() void {
-    c3.Gpio.output_enable(PIN, true);
     c3.Gpio.output(PIN);
 
     while (true) {

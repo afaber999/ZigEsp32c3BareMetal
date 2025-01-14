@@ -18,7 +18,7 @@ pub fn main() void {
     while (true) {
         if (c3.Uart0.readNonBlocking(&ch)) {
             c3.Uart0.write(ch);
-            c3.Uart0.write(ch + 1);
+            //3.Uart0.write(ch + 1);
         }
     }
 }

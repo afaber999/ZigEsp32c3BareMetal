@@ -27,6 +27,7 @@ const Examples = [_]Sample{
     Sample.init("monitor", "examples/monitor.zig", "src/link.ld", null),
     Sample.init("asm", "examples/asm/asm.zig", "src/link.ld", "examples/asm/asm.S"),
     Sample.init("systimer", "examples/systimer.zig", "src/link.ld", null),
+    Sample.init("shell", "examples/shell/main.zig", "src/link.ld", null),
 };
 
 pub fn build(b: *std.Build) void {
