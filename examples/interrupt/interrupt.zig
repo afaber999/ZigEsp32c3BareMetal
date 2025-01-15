@@ -6,17 +6,15 @@ const LED_PIN = 9;
 // External declaration for the interrupt handler assembly hook
 extern fn isr_handler() callconv(.C) noreturn;
 extern fn sub_handler() callconv(.C) void;
-extern fn led_on() callconv(.C) void;
-extern fn led_off() callconv(.C) void;
+// extern fn led_on() callconv(.C) void;
+// extern fn led_off() callconv(.C) void;
 
-extern var num_isrs: i32;
-
-extern fn set_vector_table() callconv(.C) void;
+//extern fn set_vector_table() callconv(.C) void;
 
 export fn _c3Start() noreturn {
     c3.wdt_disable();
     c3.Gpio.output(LED_PIN);
-    led_on();
+    //led_on();
     c3.delay_ms(4000);
     //led_off();
     main() catch {};
@@ -37,18 +35,18 @@ pub fn print_intstatus() !void {
 
 pub fn main() !void {
     try c3.logWriter.print("Interrupt example app v002 \r\n", .{});
-    try c3.logWriter.print("_vector_table {any}\r\n", .{&c3.sections._vector_table});
+    //try c3.logWriter.print("_vector_table {any}\r\n", .{&c3.sections._vector_table});
     c3.Interrupt.setPrioThreshold(1); // priority threshold 1
-    led_off();
+    //led_off();
 
     //var val = false;
     //c3.Gpio.write(LED_PIN, false);
 
     // dump tabel
-    c3.Debug.dump_mem(@as([*]const u8, @ptrFromInt(0x3fc80180)), 0x80);
+    c3.Debug.dump_mem(@as([*]const u8, @ptrCast(&c3.sections._c3_interrupt_vectors)), 0x80);
 
     c3.Interrupt.clearAllPendingInterrupts();
-    c3.Riscv.w_mtvec(@intFromPtr(&c3.sections._vector_table));
+    c3.Riscv.w_mtvec(@intFromPtr(&c3.sections._c3_interrupt_vectors));
 
     try c3.showInterruptVectors();
     try c3.showDataInfo();
@@ -73,23 +71,22 @@ pub fn main() !void {
 
     while (true) {
         lp += 1;
-        try c3.logWriter.print("num_isrs is {d} loops {d}\r\n", .{ num_isrs, lp });
+        try c3.logWriter.print("num_isrs is {d} loops {d}\r\n", .{ c3.num_interrupts(), lp });
 
         try print_intstatus();
 
         //led_on();
-        // try c3.logWriter.print("num_isrs is {d}\r\n", .{num_isrs});
         // try c3.logWriter.print("INT STAT 1 0x{x} STAT 0 0x{x}\r\n", .{ c3.Interrupt.getIntrStatus0(), c3.Interrupt.getIntrStatus1() });
         // //try c3.logWriter.print("INT STAT 2 0x{x} STAT 0 0x{x}\r\n", .{ c3.Interrupt.getIntrStatus0(), c3.Interrupt.getIntrStatus1() });
 
-        if (lp == 4) {
+        if (lp >= 4) {
             c3.System.setCpuIntr0(1);
         }
         // //try c3.logWriter.print("Interrupt set 0x{x}\r\n", .{c3.Riscv.r_mstatus()});
         // //try c3.showInterruptInfo();
         c3.delay_ms(700);
         //led_off();
-        //c3.Gpio.write(LED_PIN, false);
+        c3.Gpio.write(LED_PIN, false);
         c3.delay_ms(300);
         //c3.Gpio.write(LED_PIN, false);
     }

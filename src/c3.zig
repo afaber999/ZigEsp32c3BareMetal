@@ -214,7 +214,6 @@ pub const sections = struct {
     pub extern const _c3_data_load_start: u8;
     pub extern const _c3_global_pointer: u8;
 
-    pub extern const _c3_interrupt_vectors_size: u8;
     pub extern const _c3_interrupt_vectors: u8;
 
     pub extern const _vector_table: u8;
@@ -317,9 +316,8 @@ pub fn showHeapInfo() !void {
 }
 
 pub fn showInterruptInfo() !void {
-    const sz = @as(u32, @intFromPtr(&sections._c3_interrupt_vectors_size));
     const mtvec_addr = Riscv.r_mtvec();
-    _ = try logWriter.print("INTERRUPT VECOTR TABLE AT: {any} size: 0x{x} mtvec set to: 0x{x} \r\n", .{ &sections._c3_interrupt_vectors, sz, mtvec_addr });
+    _ = try logWriter.print("INTERRUPT VECOTR TABLE AT: {any}  mtvec set to: 0x{x} \r\n", .{ &sections._c3_interrupt_vectors, mtvec_addr });
 }
 
 //std.options.logFn(comptime message_level: log.Level, comptime scope: @TypeOf(.enum_literal), comptime format: []const u8, args: anytype)
@@ -358,4 +356,58 @@ pub fn showInterruptVectors() !void {
     for (0..31) |i| {
         _ = try logWriter.print("INTERRUPT VECTOR: {d} -> 0x{x}\r\n", .{ i, vector_table[i] });
     }
+}
+
+export fn zriscv_nop_func() linksection(".text") callconv(.Naked) noreturn {
+    while (true) {
+        asm volatile ("lui a0,0x60004");
+        asm volatile ("lw a1,4(a0) # 60004004");
+        asm volatile ("or a1,a1,512");
+        asm volatile ("sw a1,4(a0)");
+    }
+}
+
+//pub export fn zriscv_mtvec_table() linksection(".text.mtvec_table") callconv(.Naked) noreturn {
+pub export fn zriscv_mtvec_table() align(256) linksection(".mtvec_table") callconv(.Naked) noreturn {
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,cpu0_isr_handler");
+    asm volatile ("jal zero,cpu0_isr_handler");
+    asm volatile ("jal zero,cpu0_isr_handler");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+    asm volatile ("jal zero,zriscv_nop_func");
+}
+
+extern var _num_isrs: u32;
+
+pub fn num_interrupts() u32 {
+    return _num_isrs;
 }

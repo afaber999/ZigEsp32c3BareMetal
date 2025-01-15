@@ -38,10 +38,10 @@ inc_glob_counts:
     sw t0, 0(sp)           # Save t0 to stack
     sw t1, 4(sp)           # Save t1 to stack
 
-    la t0, glob_counts     # Load the address of num_isrs into t0
-    lw t1, 0(t0)           # Load the current value of num_isrs into t1
+    la t0, glob_counts     # Load the address of glob_counts into t0
+    lw t1, 0(t0)           # Load the current value of glob_counts into t1
     addi t1, t1, 1         # Increment the value in t1 by 1
-    sw t1, 0(t0)           # Store the incremented value back to num_isrs
+    sw t1, 0(t0)           # Store the incremented value back to glob_counts
 
     # Restore saved registers
     lw t0, 0(sp)           # Restore t0 from stack

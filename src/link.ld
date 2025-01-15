@@ -1,4 +1,4 @@
-MEMORY
+ MEMORY
 {
   drom (r): ORIGIN = 0x3C000000, LENGTH = 0x400000  # 4 MB flash, 1 byte adressing (maps to irom)
   irom (x): ORIGIN = 0x42000000, LENGTH = 0x400000  # 4 MB flash, 4 bytes addressing only
@@ -15,7 +15,7 @@ SECTIONS
   {
     _irom_start = .;
     LONG(0xaedb041d)
-    LONG(0xaedb041d)
+    LONG(0xaedb041d)    
   } > irom
   PROVIDE(_header_size = SIZEOF(.header));
 
@@ -24,14 +24,18 @@ SECTIONS
   PROVIDE (_stext = .);
   PROVIDE (stext = .);
   PROVIDE (_c3_text_start = .);
-  .text :
+  .text .:
   {
     KEEP(*(.text.entry))
     *(.text*)
     KEEP(*(.text.isr_handler*))
-    KEEP(*(.text.mtvec_table*))
   } > irom
 
+  .isr_table :
+  {
+    PROVIDE(_c3_interrupt_vectors = .);
+    KEEP(*(.mtvec_table))
+  } > irom
 
   . = ALIGN(8);
  
@@ -72,19 +76,6 @@ SECTIONS
 
   _end = .; PROVIDE (end = .);
 
-  /* Place interrupt vector table at mem upper */
-  /* size and alignment is 256 byte (0x100)    */
-  PROVIDE(_c3_interrupt_vectors_size = 0x100);
-  PROVIDE(_c3_interrupt_vectors = ORIGIN(dram1) + LENGTH(dram1) - _c3_interrupt_vectors_size);
-
-  /* Stack, place just under the interrupt vector table */
-  .stack  (NOLOAD) :
-  {
-    _c3_stack_bottom = .;
-    _c3_stack_top = _c3_interrupt_vectors;
-    _c3_stack_size_min = 0x4000;
-    ASSERT(_c3_stack_bottom + _c3_stack_size_min < _c3_stack_top, "Error: no space for stack");
-  }
   
   _c3_data_load_start = LOADADDR(.data);
 

@@ -46,9 +46,6 @@ pub fn build(b: *std.Build) void {
 
     const target = b.resolveTargetQuery(.{ .cpu_arch = Target.Cpu.Arch.riscv32, .os_tag = Target.Os.Tag.freestanding, .abi = Target.Abi.none, .cpu_model = .{ .explicit = &std.Target.riscv.cpu.generic_rv32 }, .cpu_features_sub = disabled_features, .cpu_features_add = enabled_features });
 
-    const c3ModuleName = "c3";
-    const c3Module = b.addModule(c3ModuleName, .{ .root_source_file = b.path("src/c3.zig") });
-
     const cflags = &[_][]const u8{
         "-Wall",
         "-Werror",
@@ -63,6 +60,11 @@ pub fn build(b: *std.Build) void {
         "-fno-common",
         "-fno-omit-frame-pointer",
     };
+
+    const c3ModuleName = "c3";
+    const c3Module = b.addModule(c3ModuleName, .{ .root_source_file = b.path("src/c3.zig") });
+    c3Module.addCSourceFile(.{ .file = b.path("./src/c3.S"), .flags = cflags });
+
 
     inline for (Examples) |example| {
         const firmware = b.addExecutable(.{
