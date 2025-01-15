@@ -75,6 +75,10 @@ pub const CORE0_CPU_INT_PRI_0 = 0x114;
 
 const _regs: [*]volatile u32 = c3.Reg.interrupt;
 
+pub inline fn eipStatuCor0() u32 {
+    return _regs[CORE0_CPU_INT_EIP_STATUS / 4];
+}
+
 pub inline fn enableCor0(interrupt: u5) void {
     _regs[CORE0_CPU_INT_ENABLE / 4] = c3.Bit(interrupt);
 }
@@ -115,3 +119,5 @@ pub inline fn getIntrStatus0() u32 {
 pub inline fn getIntrStatus1() u32 {
     return _regs[CORE0_INTR_STATUS_1 / 4];
 }
+
+
