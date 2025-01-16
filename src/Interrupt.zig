@@ -119,3 +119,29 @@ pub inline fn getIntrStatus0() u32 {
 pub inline fn getIntrStatus1() u32 {
     return _regs[CORE0_INTR_STATUS_1 / 4];
 }
+
+pub inline fn map_core0_systimer_target0(interrupt: u5) void {
+    _regs[CORE0_SYSTIMER_TARGET0_INT_MAP / 4] = interrupt;
+}
+pub inline fn map_core0_systimer_target1(interrupt: u5) void {
+    _regs[CORE0_SYSTIMER_TARGET1_INT_MAP / 4] = interrupt;
+}
+pub inline fn map_core0_systimer_target2(interrupt: u5) void {
+    _regs[CORE0_SYSTIMER_TARGET2_INT_MAP / 4] = interrupt;
+}
+
+pub inline fn map_core0_cpu_intr_0(interrupt: u5) void {
+    _regs[CORE0_CPU_INTR_FROM_CPU_0_MAP / 4] = interrupt;
+}
+
+pub inline fn map_core0_cpu_intr_1(interrupt: u5) void {
+    _regs[CORE0_CPU_INTR_FROM_CPU_1_MAP / 4] = interrupt;
+}
+
+pub inline fn map_core0_cpu_intr_2(interrupt: u5) void {
+    _regs[CORE0_CPU_INTR_FROM_CPU_2_MAP / 4] = interrupt;
+}
+
+pub inline fn map_core0_cpu_intr_3(interrupt: u5) void {
+    _regs[CORE0_CPU_INTR_FROM_CPU_3_MAP / 4] = interrupt;
+}
