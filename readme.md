@@ -1,6 +1,6 @@
 # Zig Baremetal Library for ESP32-C3 (RISC-V)
 
-Welcome to the experimental **Zig baremetal library** for the **ESP32-C3**, based on the **RISC-V** architecture. This library is a personal project created for experimentation and learning, providing a minimalistic environment for running baremetal applications on the ESP32-C3 microcontroller without relying on an RTOS and SDKs (like FreeTos andESP-IDF). 
+Welcome to the experimental **Zig baremetal library** for the **ESP32-C3**, based on the **RISC-V** architecture. This library is a personal project created for experimentation and learning, providing a minimalistic environment for running baremetal applications on the ESP32-C3 microcontroller without relying on an RTOS and SDKs (like FreeTos and ESP-IDF). 
 
 Although still in its early stages, the library includes some core features and sample programs that can run on an ESP32 C3 microcontroller, 
 making it a great starting point for exploring the ESP32-C3 and the RISC-V architecture using Zig.
@@ -15,17 +15,21 @@ making it a great starting point for exploring the ESP32-C3 and the RISC-V archi
   - UART for serial communication.
   - GPIO for basic input/output.
   - Panic handling.
-- **Logging Framework**: Custom logging for debugging and experimentation.
+- **Zig Logging interop**: Custom logging for debugging and experimentation.
+- **Zig panic interop **: Setup panic handler
+- **Assembly and interrupt interop **: Interrupt vector table
 - **Sample Programs**:
   - UART echo.
   - Logging with different verbosity levels.
   - Panic handling demonstration.
   - show (memory) system information
-
+  - show how to interop with RiscV assembly
+  - Setup interrupts and interrupts override
 
 ---
 
 ## Getting Started
+zig build
 
 
 ### Prerequisites
@@ -50,10 +54,29 @@ making it a great starting point for exploring the ESP32-C3 and the RISC-V archi
     zig build flash_panic
     zig build flash_sysinfo
     zig build flash_uart_echo
+    zig build flash_shell
+    zig build flash_systimer
+    zig build flash_interrupt
+
+
 
 In order to flash, the esptool has needs to be installed on the system.
 On windows download the esptool.exe and is in the search path
 On linux system the build script assumes that the esptool python tool is installed
+
+# CREDITS:
+Inspiration form the following project:
+
+MicroZig : https://github.com/ZigEmbeddedGroup/microzig
+Mini rv32: https://github.com/ringtailsoftware/zig-minirv32
+MicroZig : https://github.com/ZigEmbeddedGroup/microzig
+MDK : https://github.com/cpq/mdk
+RISC-V-Devkit-for-ESP32C3: https://github.com/AlexManoJAM/RISC-V-Devkit-for-ESP32C3
+Direct Boot example: https://github.com/espressif/esp32c3-direct-boot-example
+esp32c3_baremetal: https://github.com/skagus/esp32c3_baremetal/tree/main/esp32c3
+zig esp32c3 vector example: https://github.com/JohnnyZig/zig-risv32-link-fail
+c3dk https://github.com/j0hax/c3dk 
+esptool
 
 
 # my notes, TODO remove, please ignore
@@ -73,17 +96,3 @@ $ riscv64-unknown-elf-objdump.exe  -t -h ./zig-out/bin/zfirmware.elf
 openocd_esp/bin/openocd -c "gdb_port 50007" -c "tcl_port 50008" -f "openocd_esp/support/openocd-helpers.tcl" -f board/esp32c3-builtin.cfg -d3
 
 
-# CREDITS:
-Inspiration form the following project:
-
-MicroZig :
-https://github.com/ringtailsoftware/zig-minirv32
-
-MicroZig : https://github.com/ZigEmbeddedGroup/microzig
-MDK : https://github.com/cpq/mdk
-RISC-V-Devkit-for-ESP32C3: https://github.com/AlexManoJAM/RISC-V-Devkit-for-ESP32C3
-Direct Boot example: https://github.com/espressif/esp32c3-direct-boot-example
-esp32c3_baremetal: https://github.com/skagus/esp32c3_baremetal/tree/main/esp32c3
-
-c3 
-esptool

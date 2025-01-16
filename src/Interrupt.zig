@@ -80,11 +80,11 @@ pub inline fn eipStatuCor0() u32 {
 }
 
 pub inline fn enableCor0(interrupt: u5) void {
-    _regs[CORE0_CPU_INT_ENABLE / 4] = c3.Bit(interrupt);
+    _regs[CORE0_CPU_INT_ENABLE / 4] |= c3.Bit(interrupt);
 }
 
 pub inline fn disableCor0(interrupt: u5) void {
-    _regs[CORE0_CPU_INT_ENABLE / 4] = c3.Bit(interrupt);
+    _regs[CORE0_CPU_INT_ENABLE / 4] |= c3.Bit(interrupt);
 }
 
 // AF DECL ENUM for u1 (edge/level)
@@ -105,7 +105,7 @@ pub inline fn setPrioThreshold(threshold: u4) void {
 // for levle triggered interrupts, this is not necessary
 // once should clear the interrupt source instead
 pub inline fn clearPendingInterrupt(interrupt: u5) void {
-    _regs[CORE0_CPU_INT_CLEAR / 4] = c3.Bit(interrupt);
+    _regs[CORE0_CPU_INT_CLEAR / 4] |= c3.Bit(interrupt);
 }
 
 pub inline fn clearAllPendingInterrupts() void {
