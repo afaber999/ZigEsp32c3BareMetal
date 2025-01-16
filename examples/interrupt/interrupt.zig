@@ -3,6 +3,8 @@ const c3 = @import("c3");
 
 const LED_PIN = 9;
 
+extern var _num_01_ints : u32;
+
 export fn _c3Start() noreturn {
     c3.wdt_disable();
     c3.Gpio.output(LED_PIN);
@@ -32,7 +34,7 @@ pub fn main() !void {
 
     while (true) {
         lp += 1;
-        try c3.logWriter.print("num_isrs is {d} loops {d}\r\n", .{ c3.num_interrupts(), lp });
+        try c3.logWriter.print("num_isrs is {d} loops {d}\r\n", .{ _num_01_ints, lp });
         if (lp >= 4) {
             c3.System.setCpuIntr0(1);
         }

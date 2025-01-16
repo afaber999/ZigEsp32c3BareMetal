@@ -119,5 +119,3 @@ pub inline fn getIntrStatus0() u32 {
 pub inline fn getIntrStatus1() u32 {
     return _regs[CORE0_INTR_STATUS_1 / 4];
 }
-
-

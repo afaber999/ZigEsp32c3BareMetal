@@ -75,8 +75,6 @@ SECTIONS
   } > dram1
 
   _end = .; PROVIDE (end = .);
-
-  
   _c3_data_load_start = LOADADDR(.data);
 
   /* stack growing down from top of SRAM */
