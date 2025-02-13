@@ -221,6 +221,7 @@ pub const sections = struct {
 
 export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
     asm volatile ("la sp, _c3_stack_top");
+    asm volatile ("la fp, _c3_stack_top"); // since naked function, also set the frame pointer, for temp vars
     asm volatile (
         \\.option push
         \\.option norelax
@@ -357,4 +358,3 @@ pub fn showInterruptVectors() !void {
         _ = try logWriter.print("INTERRUPT VECTOR: {d} -> 0x{x}\r\n", .{ i, vector_table[i] });
     }
 }
-

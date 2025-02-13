@@ -1,3 +1,5 @@
+const std = @import("std");
+
 // Machine-mode interrupt vector
 pub inline fn r_mtvec() usize {
     return asm volatile ("csrr a0, mtvec"
@@ -54,4 +56,29 @@ pub inline fn disable_interrupts() void {
     var mstatus = r_mstatus();
     mstatus &= ~(1 << 3); // Clear the MIE bit (bit 3)
     w_mstatus(mstatus);
+}
+
+const registers = [_][]const u8{
+    "ra", "t0", "t1", "t2", "t3", "t4", "t5", "t6",
+    "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
+};
+
+pub inline fn push_interrupt_state() void {
+    asm volatile (std.fmt.comptimePrint("addi sp, sp, -{}", .{registers.len * @sizeOf(u32)}));
+
+    inline for (registers, 0..) |reg, i| {
+        asm volatile (std.fmt.comptimePrint("sw {s}, 4*{}(sp)", .{ reg, i }));
+    }
+}
+
+pub inline fn pop_interrupt_state() void {
+    inline for (registers, 0..) |reg, i| {
+        asm volatile (std.fmt.comptimePrint("lw {s}, 4*{}(sp)", .{ reg, i }));
+    }
+
+    asm volatile (std.fmt.comptimePrint("addi sp, sp, {}", .{registers.len * @sizeOf(u32)}));
+}
+
+pub inline fn interrupt_return() void {
+    asm volatile ("mret" ::: "memory");
 }

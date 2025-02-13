@@ -105,7 +105,7 @@ pub fn build(b: *std.Build) void {
             else => "./flash.sh",
         };
 
-        // add run/flash step for each sample
+        // add run/flash step for each sampleFflash
         const flash_cmd = b.addSystemCommand(&[_][]const u8{
             flash_cmd_script,
             example.name,

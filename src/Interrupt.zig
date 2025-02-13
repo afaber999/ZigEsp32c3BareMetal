@@ -145,3 +145,45 @@ pub inline fn map_core0_cpu_intr_2(interrupt: u5) void {
 pub inline fn map_core0_cpu_intr_3(interrupt: u5) void {
     _regs[CORE0_CPU_INTR_FROM_CPU_3_MAP / 4] = interrupt;
 }
+
+// ISR wrapper generator
+pub fn make_isr_handler(comptime irq_nr: usize, comptime func: anytype) type {
+    comptime std.debug.assert(@typeInfo(@TypeOf(func)) == .Fn);
+    comptime std.debug.assert(irq_nr < 32);
+
+    return struct {
+        pub const exported_name = std.fmt.comptimePrint("_isr_handler_{d:0>2}", .{irq_nr});
+        pub const fn_name = nameOf.Fn(func);
+
+        pub fn isr_vector() callconv(.Naked) void {
+            c3.Riscv.push_interrupt_state();
+            asm volatile ("jal " ++ fn_name ::: "memory");
+            c3.Riscv.pop_interrupt_state();
+            c3.Riscv.interrupt_return();
+        }
+        comptime {
+            const options = .{ .name = exported_name };
+            @export(isr_vector, options);
+        }
+    };
+}
+
+// Trick to obtain name of a function
+// This is a workaround for the lack of a proper way to get the name of a function in Zig
+// https://github.com/ziglang/zig/issues/8270
+const nameOf = struct {
+    fn Dummy(func: anytype) type {
+        return struct {
+            fn warpper() void {
+                func();
+            }
+        };
+    }
+
+    pub fn Fn(func: anytype) []const u8 {
+        const name = @typeName(Dummy(func));
+        const start = (std.mem.indexOfScalar(u8, name, '\'') orelse unreachable) + 1;
+        const end = std.mem.indexOfScalarPos(u8, name, start, '\'') orelse unreachable;
+        return name[start..end];
+    }
+};

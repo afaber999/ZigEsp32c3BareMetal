@@ -28,6 +28,12 @@ _isr_handler_01:
     addi t0, t0, 0x028     # Add the lower 12 bits (0x028)
     sw x0, 0(t0)           # Store word (0) at the address in t0
 
+    # Clear interrupt level (CPU_INTR_FROM_CPU_1 ) 0x600C002C
+    lui t0, 0x600C0        # Load upper 20 bits of 0x600C0000
+    addi t0, t0, 0x02C     # Add the lower 12 bits (0x02c)
+    sw x0, 0(t0)           # Store word (0) at the address in t0
+
+
     # Restore saved registers
     lw t0, 0(sp)           # Restore t0 from stack
     lw t1, 4(sp)           # Restore t1 from stack
