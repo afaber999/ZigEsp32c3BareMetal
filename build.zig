@@ -18,7 +18,7 @@ const Sample = struct {
 const Examples = [_]Sample{
     Sample.init("blink", "examples/blink.zig", "src/link.ld", null),
     Sample.init("gpio", "examples/gpio.zig", "src/link.ld", null),
-    Sample.init("interrupt", "examples/interrupt/interrupt.zig", "src/link.ld", "examples/interrupt/interrupt.S"),
+    Sample.init("interrupt", "examples/interrupt/interrupt.zig", "src/link.ld", null),
     Sample.init("main", "examples/main.zig", "src/link.ld", null),
     Sample.init("uart_echo", "examples/uart_echo.zig", "src/link.ld", null),
     Sample.init("logger", "examples/logger.zig", "src/link.ld", null),
