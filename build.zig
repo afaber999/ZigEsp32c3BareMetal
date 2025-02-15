@@ -28,6 +28,7 @@ const Examples = [_]Sample{
     Sample.init("asm", "examples/asm/asm.zig", "src/link.ld", "examples/asm/asm.S"),
     Sample.init("systimer", "examples/systimer.zig", "src/link.ld", null),
     Sample.init("shell", "examples/shell/main.zig", "src/link.ld", null),
+    Sample.init("ledc", "examples/ledc.zig", "src/link.ld", null),
 };
 
 pub fn build(b: *std.Build) void {
@@ -64,7 +65,6 @@ pub fn build(b: *std.Build) void {
     const c3ModuleName = "c3";
     const c3Module = b.addModule(c3ModuleName, .{ .root_source_file = b.path("src/c3.zig") });
     c3Module.addCSourceFile(.{ .file = b.path("./src/c3.S"), .flags = cflags });
-
 
     inline for (Examples) |example| {
         const firmware = b.addExecutable(.{

@@ -1,36 +1,7 @@
 const std = @import("std");
-const c3 = @import("c3.zig");
 const mmio = @import("mmio.zig");
 
-const CPU_PERI_CLK_EN0 = 0x010;
-const CPU_INTR_FROM_CPU_0 = 0x028;
-const CPU_INTR_FROM_CPU_1 = 0x02C;
-const CPU_INTR_FROM_CPU_2 = 0x030;
-const CPU_INTR_FROM_CPU_3 = 0x034;
-
-const CONF = 0x0058;
-
-const _regs: [*]volatile u32 = c3.Reg.system;
-
-const SYSTEM_LEDC_CLK_EN = 11;
-
-pub fn getPeriClkEn0() u32 {
-    return _regs[CPU_PERI_CLK_EN0 / 4];
-}
-
-pub fn setPeriClkEn0(val: u32) u32 {
-    _regs[CPU_PERI_CLK_EN0 / 4] = val;
-}
-
-pub fn isCpuIntr0() u1 {
-    return ptr.CPU_INTR_FROM_CPU_0;
-    //return @truncate(_regs[CPU_INTR_FROM_CPU_0 / 4]);
-}
-
-pub fn setCpuIntr0(value: u1) void {
-    //    _regs[CPU_INTR_FROM_CPU_0 / 4] = value;
-    ptr.CPU_INTR_FROM_CPU_0.modify(.{ .CPU_INTR_FROM_CPU_0 = value });
-}
+pub const ptr: *volatile types.SYSTEM = @ptrFromInt(0x600c0000);
 
 pub fn setCpuIntr(comptime intr: u2, value: u1) void {
     switch (intr) {
@@ -40,8 +11,6 @@ pub fn setCpuIntr(comptime intr: u2, value: u1) void {
         3 => ptr.CPU_INTR_FROM_CPU_3.modify(.{ .CPU_INTR_FROM_CPU_3 = value }),
     }
 }
-
-pub const ptr: *volatile types.SYSTEM = @ptrFromInt(0x600c0000);
 
 pub const types = struct {
     /// System
