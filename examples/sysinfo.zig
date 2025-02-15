@@ -17,6 +17,11 @@ pub fn main() !void {
         try c3.showHeapInfo();
         try c3.showInterruptInfo();
         try c3.showInterruptVectors();
+        try c3.logWriter.print("getPeriClkEn0 0b{b:0<8}\r\n", .{c3.system.getPeriClkEn0()});
+
+        const v = c3.system.ptr.*;
+        try c3.logWriter.print("Systemptr: {any}\r\n", .{v});
+
         c3.delay_ms(1000);
     }
 }

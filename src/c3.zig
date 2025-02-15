@@ -2,7 +2,7 @@ const std = @import("std");
 const Uart = @import("Uart.zig");
 pub const Debug = @import("Debug.zig");
 pub const Riscv = @import("Riscv.zig");
-pub const System = @import("System.zig");
+pub const system = @import("System.zig");
 pub const SysTimer = @import("SysTimer.zig");
 pub const Interrupt = @import("Interrupt.zig");
 
@@ -13,6 +13,7 @@ pub const uart0 = Uart0{};
 pub const uart1 = Uart1{};
 
 pub const logWriter = uart0.writer();
+
 
 pub fn Bit(comptime x: u5) u32 {
     return 1 << x;

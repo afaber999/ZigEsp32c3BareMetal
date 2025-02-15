@@ -20,7 +20,7 @@ export fn cpu0_isr_handler() callconv(.C) void {
         c3.Gpio.write(LED_PIN, false);
     }
     // have to clear the software interrupt
-    c3.System.setCpuIntr0(0);
+    c3.system.setCpuIntr(0,0);
     num_ints[1] += 1;
 }
 
@@ -43,7 +43,7 @@ pub fn main() !void {
     try c3.logWriter.print("Interrupt example app v004 \r\n", .{});
     try c3.logWriter.print("After 4 loops generate software CPU0 interrupt Interrupt (01) \r\n", .{});
     try c3.logWriter.print("SysTimer 1 fires every 3 seconds an interrupt (02) \r\n", .{});
-    try c3.logWriter.print("The interrupt service routines (ISR) can be written in assembler of Zig \r\n", .{});
+    try c3.logWriter.print("The interrupt service routines (ISR) can be written in assembler or Zig \r\n", .{});
     c3.Interrupt.setPrioThreshold(1); // priority threshold 1
 
     const int_1 = 1;
@@ -80,7 +80,8 @@ pub fn main() !void {
         // start genering software interrupts after 4 loops
         if (lp >= 4) {
             //c3.System.setCpuIntr1(1);
-            c3.System.setCpuIntr0(1);
+            c3.system.setCpuIntr(0, 1);
+            //c3.System.system.CPU_INTR_FROM_CPU_0;
         }
         c3.delay_ms(700);
 
