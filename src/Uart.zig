@@ -1,9 +1,11 @@
 const std = @import("std");
 const rv32 = @import("rv32.zig");
+const chip = @import("chip.zig");
+
+const peripherals = chip.devices.@"ESP32-C3".peripherals;
 
 pub const Uart0 = Uart(0);
 pub const Uart1 = Uart(1);
-
 
 pub const ReceiveError = error{
     OverrunError,
@@ -17,23 +19,23 @@ fn Uart(comptime n: usize) type {
     return struct {
         const Self = @This();
 
-        const _regs: [*]volatile u32 = switch (n) {
-            0 => rv32.Reg.uart0,
-            1 => rv32.Reg.uart1,
+        const _ptr = switch (n) {
+            0 => peripherals.UART0,
+            1 => peripherals.UART1,
             else => @compileError("Unknown UART number"),
         };
 
         const UART_FIFO_SIZE = 128;
         const UART_FIFO_HIGH = UART_FIFO_SIZE - 4;
-        const FIFO = 0x0;
-        const CLKDIV = 0x14;
-        const STATUS = 0x1C;
-        const CONF0 = 0x20;
-        const CONF1 = 0x24;
-        const CLKCONF = 0x78;
-        const MEM_CONF = 0x60;
-        const MEM_TX_STATUS = 0x64;
-        const MEM_RX_STATUS = 0x68;
+        // const FIFO = 0x0;
+        // const CLKDIV = 0x14;
+        // const STATUS = 0x1C;
+        // const CONF0 = 0x20;
+        // const CONF1 = 0x24;
+        // const CLKCONF = 0x78;
+        // const MEM_CONF = 0x60;
+        // const MEM_TX_STATUS = 0x64;
+        // const MEM_RX_STATUS = 0x68;
 
         pub const Writer = std.io.GenericWriter(Self, error{}, generic_writer_fn);
 
@@ -48,18 +50,16 @@ fn Uart(comptime n: usize) type {
         }
 
         pub inline fn txFifoLen() u32 {
-            // 9 bits, max 512 FIFO bytes
-            return (_regs[STATUS / 4] >> 16) & 0x1FF;
+            return _ptr.STATUS.read().TXFIFO_CNT;
         }
 
         pub inline fn rxFifoLen() u32 {
-            // 9 bits, max 512 FIFO bytes
-            return (_regs[STATUS / 4] >> 0) & 0x1FF;
+            return _ptr.STATUS.read().RXFIFO_CNT;
         }
 
         pub fn readNonBlocking(c: *u8) bool {
             if (rxFifoLen() == 0) return false;
-            c.* = @truncate(_regs[FIFO]);
+            c.* = _ptr.FIFO.read().RXFIFO_RD_BYTE;
             return true;
         }
 
@@ -75,7 +75,7 @@ fn Uart(comptime n: usize) type {
             if (txFifoLen() >= UART_FIFO_HIGH) {
                 return false;
             }
-            _regs[FIFO] = c;
+            _ptr.FIFO.raw = c;
             return true;
         }
 

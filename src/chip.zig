@@ -1,5 +1,6 @@
-const micro = @import("microzig");
-const mmio = micro.mmio;
+// Chip file from Microzig library
+// which is generted from the ESP32-C3 datasheet (SVD file)
+const mmio = @import("mmio.zig");
 
 pub const devices = struct {
     /// 32-bit RISC-V MCU & 2.4 GHz Wi-Fi & Bluetooth 5 (LE)
@@ -1158,17 +1159,17 @@ pub const types = struct {
                 CORE_X_IRAM0_DRAM0_LIMIT_CYCLE_1: u20,
                 padding: u12,
             }),
-            /// ASSIST_DEBUG_LOG_SETTING
-            LOG_SETTING: mmio.Mmio(packed struct(u32) {
-                /// reg_log_ena
-                LOG_ENA: u3,
-                /// reg_log_mode
-                LOG_MODE: u4,
-                /// reg_log_mem_loop_enable
-                LOG_MEM_LOOP_ENABLE: u1,
-                padding: u24,
-                1,
-            }),
+            /// AF TODO CHECK ASSIST_DEBUG_LOG_SETTING
+            // LOG_SETTING: mmio.Mmio(packed struct(u32) {
+            //     /// reg_log_ena
+            //     LOG_ENA: u3,
+            //     /// reg_log_mode
+            //     LOG_MODE: u4,
+            //     /// reg_log_mem_loop_enable
+            //     LOG_MEM_LOOP_ENABLE: u1,
+            //     padding: u24,
+            //     1,
+            // }),
             /// ASSIST_DEBUG_LOG_DATA_0_REG
             LOG_DATA_0: mmio.Mmio(packed struct(u32) {
                 /// reg_log_data_0

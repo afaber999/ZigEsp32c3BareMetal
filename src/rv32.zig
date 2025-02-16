@@ -1,5 +1,4 @@
 const std = @import("std");
-//const chip = @import("chip.zig");
 const Uart = @import("Uart.zig");
 pub const Debug = @import("Debug.zig");
 pub const Riscv = @import("Riscv.zig");
@@ -19,6 +18,8 @@ pub const logWriter = uart0.writer();
 pub fn Bit(comptime x: u5) u32 {
     return 1 << x;
 }
+
+const peripherals = @import("chip.zig").devices.@"ESP32-C3".peripherals;
 
 pub const Reg = struct {
     pub const C3_SYSTEM = 0x600c0000;

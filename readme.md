@@ -65,7 +65,7 @@ On windows download the esptool.exe and is in the search path
 On linux system the build script assumes that the esptool python tool is installed
 
 # CREDITS:
-Inspiration form the following project:
+Inspiration from the following project:
 
 MicroZig : https://github.com/ZigEmbeddedGroup/microzig
 Mini rv32: https://github.com/ringtailsoftware/zig-minirv32
