@@ -1,17 +1,22 @@
 const std = @import("std");
-const Uart = @import("Uart.zig");
 pub const Debug = @import("Debug.zig");
 pub const Riscv = @import("Riscv.zig");
 pub const system = @import("system.zig");
 pub const SysTimer = @import("SysTimer.zig");
 pub const Interrupt = @import("Interrupt.zig");
 pub const ledc = @import("ledc.zig");
+pub const timers = @import("timers.zig");
+pub const rtc = @import("rtc.zig");
+const uart = @import("uart.zig");
 
-pub const Uart0 = Uart.Uart0;
-pub const Uart1 = Uart.Uart1;
+pub const Uart0 = uart.Uart0;
+pub const Uart1 = uart.Uart1;
 
-pub const uart0 = Uart0{};
-pub const uart1 = Uart1{};
+pub const uart0 = uart.uart0;
+pub const uart1 = uart.uart1;
+
+pub const Timer0 = timers.Timer0;
+pub const Timer1 = timers.Timer1;
 
 pub const logWriter = uart0.writer();
 
@@ -92,20 +97,24 @@ pub const Reg = struct {
 };
 
 pub fn wdt_disable() void {
-    Reg.rtcCntl[42] = 0x50d83aa1;
-    Reg.rtcCntl[36] = 0; // Disable RTC WDT
-    Reg.rtcCntl[35] = 0; // Disable
+    const DOGFOOD = 0x50d83aa1;
+    const SUPER_DOGFOOD = 0x8F1D312A;
 
-    // // bootloader_super_wdt_auto_feed()
-    Reg.rtcCntl[44] = 0x8F1D312A;
-    Reg.rtcCntl[43] = Bit(31);
-    Reg.rtcCntl[45] = 0;
+    // feed and disable watchdogs 0
+    // timers.ptrTimg0.WDTWPROTECT.raw = DOGFOOD;
+    // timers.ptrTimg0.WDTCONFIG0.raw = 0;
+    // timers.ptrTimg0.WDTWPROTECT.raw = 0;
+    Timer0.disableWatchdog();
 
-    //Reg.write(Reg.C3_TIMERGROUP0 + 63 * 4, Reg.read(Reg.C3_TIMERGROUP0 + 63 * 4) & ~Bit(9)); // TIMG_REGCLK -> disable TIMG_WDT_CLK
+    // feed and disable RTC watchdogs
+    rtc.ptr.WDTWPROTECT.raw = DOGFOOD;
+    rtc.ptr.WDTCONFIG0.raw = 0;
+    rtc.ptr.WDTWPROTECT.raw = 0;
 
-    Reg.timerGroup0[63] &= ~Bit(9);
-    Reg.timerGroup0[18] = 0; // Disable TG0 WDT
-    Reg.timerGroup1[18] = 0; // Disable TG1 WDT
+    // feed and disable the RTC super watchdog
+    rtc.ptr.SWD_WPROTECT.raw = SUPER_DOGFOOD;
+    rtc.ptr.SWD_CONF.modify(.{ .SWD_DISABLE = 1 });
+    rtc.ptr.SWD_WPROTECT.raw = 0;
 }
 
 // API GPIO
@@ -138,29 +147,6 @@ pub const Gpio = struct {
     pub inline fn read(pin: usize) bool {
         const v = Reg.gpio[15] & Bit(pin);
         return v != 0;
-    }
-};
-
-pub const Timer0 = struct {
-    const _regs: [*]volatile u32 = Reg.timerGroup0;
-
-    pub fn setLoadValue(value: u32) void {
-        _regs[0x00 / 4] = value;
-    }
-
-    pub fn enableInterrupt() void {
-        // Enable the interrupt for Timer0        const int_enable_reg = @intToPtr(*volatile u32, 0x6001F004);
-        _regs[0x04 / 4] |= 0x1;
-    }
-
-    pub fn start() void {
-        // Start Timer0
-        _regs[0x08 / 4] |= 0x1;
-    }
-
-    pub fn clearInterrupt() void {
-        // Clear the interrupt for Timer0
-        _regs[0x0C / 4] |= 0x1;
     }
 };
 

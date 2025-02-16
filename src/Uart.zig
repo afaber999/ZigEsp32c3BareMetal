@@ -7,6 +7,9 @@ const peripherals = chip.devices.@"ESP32-C3".peripherals;
 pub const Uart0 = Uart(0);
 pub const Uart1 = Uart(1);
 
+pub const uart0 = Uart0{};
+pub const uart1 = Uart1{};
+
 pub const ReceiveError = error{
     OverrunError,
     BreakError,
@@ -27,15 +30,6 @@ fn Uart(comptime n: usize) type {
 
         const UART_FIFO_SIZE = 128;
         const UART_FIFO_HIGH = UART_FIFO_SIZE - 4;
-        // const FIFO = 0x0;
-        // const CLKDIV = 0x14;
-        // const STATUS = 0x1C;
-        // const CONF0 = 0x20;
-        // const CONF1 = 0x24;
-        // const CLKCONF = 0x78;
-        // const MEM_CONF = 0x60;
-        // const MEM_TX_STATUS = 0x64;
-        // const MEM_RX_STATUS = 0x68;
 
         pub const Writer = std.io.GenericWriter(Self, error{}, generic_writer_fn);
 
