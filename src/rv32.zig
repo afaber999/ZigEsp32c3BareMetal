@@ -1,4 +1,5 @@
 const std = @import("std");
+//const chip = @import("chip.zig");
 const Uart = @import("Uart.zig");
 pub const Debug = @import("Debug.zig");
 pub const Riscv = @import("Riscv.zig");
@@ -195,38 +196,38 @@ pub const sections = struct {
     // it looks odd to just use a u8 here, but in C it's common to use a
     // char when linking these values from the linkerscript. What's
     // important is the addresses of these values.
-    pub extern var _c3_text_start: u8;
-    pub extern var _c3_text_end: u8;
+    pub extern var _rv32_text_start: u8;
+    pub extern var _rv32_text_end: u8;
 
-    pub extern var _c3_stack_top: u8;
-    pub extern var _c3_stack_bottom: u8;
-    pub extern var _c3_stack_size: u8;
+    pub extern var _rv32_stack_top: u8;
+    pub extern var _rv32_stack_bottom: u8;
+    pub extern var _rv32_stack_size: u8;
 
-    pub extern var _c3_heap_start: u8;
-    pub extern var _c3_heap_end: u8;
-    pub extern var _c3_heap_size: u8;
+    pub extern var _rv32_heap_start: u8;
+    pub extern var _rv32_heap_end: u8;
+    pub extern var _rv32_heap_size: u8;
 
-    pub extern var _c3_data_start: u8;
-    pub extern var _c3_data_end: u8;
+    pub extern var _rv32_data_start: u8;
+    pub extern var _rv32_data_end: u8;
 
-    pub extern var _c3_bss_start: u8;
-    pub extern var _c3_bss_end: u8;
+    pub extern var _rv32_bss_start: u8;
+    pub extern var _rv32_bss_end: u8;
 
-    pub extern const _c3_data_load_start: u8;
-    pub extern const _c3_global_pointer: u8;
+    pub extern const _rv32_data_load_start: u8;
+    pub extern const _rv32_global_pointer: u8;
 
-    pub extern const _c3_interrupt_vectors: u8;
+    pub extern const _rv32_interrupt_vectors: u8;
 
     pub extern const _vector_table: u8;
 };
 
 export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
-    asm volatile ("la sp, _c3_stack_top");
-    asm volatile ("la fp, _c3_stack_top"); // since naked function, also set the frame pointer, for temp vars
+    asm volatile ("la sp, _rv32_stack_top");
+    asm volatile ("la fp, _rv32_stack_top"); // since naked function, also set the frame pointer, for temp vars
     asm volatile (
         \\.option push
         \\.option norelax
-        \\la gp, _c3_global_pointer
+        \\la gp, _rv32_global_pointer
         \\.option pop
     );
 
@@ -234,35 +235,35 @@ export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
 
     // fill .bss with zeroes
     {
-        const bss_start: [*]u8 = @ptrCast(&sections._c3_bss_start);
-        const bss_end: [*]u8 = @ptrCast(&sections._c3_bss_end);
+        const bss_start: [*]u8 = @ptrCast(&sections._rv32_bss_start);
+        const bss_end: [*]u8 = @ptrCast(&sections._rv32_bss_end);
         const bss_len = @intFromPtr(bss_end) - @intFromPtr(bss_start);
 
         @memset(bss_start[0..bss_len], 0);
     }
     // load .data from flash
     {
-        const data_start: [*]u8 = @ptrCast(&sections._c3_data_start);
-        const data_end: [*]u8 = @ptrCast(&sections._c3_data_end);
+        const data_start: [*]u8 = @ptrCast(&sections._rv32_data_start);
+        const data_end: [*]u8 = @ptrCast(&sections._rv32_data_end);
         const data_len = @intFromPtr(data_end) - @intFromPtr(data_start);
-        const data_src: [*]const u8 = @ptrCast(&sections._c3_data_load_start);
+        const data_src: [*]const u8 = @ptrCast(&sections._rv32_data_load_start);
 
         if ((data_start != data_src) and (data_len > 0)) {
             @memcpy(data_start[0..data_len], data_src[0..data_len]);
         }
     }
 
-    Riscv.w_mtvec(@intFromPtr(&sections._c3_interrupt_vectors));
+    Riscv.w_mtvec(@intFromPtr(&sections._rv32_interrupt_vectors));
     //setCpuClock(160);
-    asm volatile ("jal zero, _c3Start");
+    asm volatile ("jal zero, _rv32Start");
 }
 
 pub fn sbss() [*]volatile u32 {
-    return @ptrCast(&sections._c3_bss_start);
+    return @ptrCast(&sections._rv32_bss_start);
 }
 
 pub fn ebss() [*]const u32 {
-    return @ptrCast(&sections._c3_bss_end);
+    return @ptrCast(&sections._rv32_bss_end);
 }
 
 pub fn setCpuClock(freqInMhz: usize) void {
@@ -280,46 +281,46 @@ pub fn setCpuClock(freqInMhz: usize) void {
 
 }
 
-//var c3Allocator: std.heap.FixedBufferAllocator = null;
-var c3Allocator: ?std.heap.FixedBufferAllocator = null;
+//var rv32Allocator: std.heap.FixedBufferAllocator = null;
+var rv32Allocator: ?std.heap.FixedBufferAllocator = null;
 
 pub fn heapAllocator() std.mem.Allocator {
-    if (c3Allocator == null) {
-        const heap_len = @intFromPtr(&sections._c3_heap_end) - @intFromPtr(&sections._c3_heap_start);
-        const heap_mem = @as([*]u8, @ptrCast(&sections.sections._c3_heap_start))[0..heap_len];
-        c3Allocator = std.heap.FixedBufferAllocator.init(heap_mem);
+    if (rv32Allocator == null) {
+        const heap_len = @intFromPtr(&sections._rv32_heap_end) - @intFromPtr(&sections._rv32_heap_start);
+        const heap_mem = @as([*]u8, @ptrCast(&sections.sections._rv32_heap_start))[0..heap_len];
+        rv32Allocator = std.heap.FixedBufferAllocator.init(heap_mem);
     }
-    return c3Allocator.?.allocator();
+    return rv32Allocator.?.allocator();
 }
 
 pub fn showStackInfo() !void {
-    const sz = @as(u32, @intFromPtr(&sections._c3_stack_top)) - @as(u32, @intFromPtr(&sections._c3_stack_bottom));
-    _ = try logWriter.print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_stack_top, &sections._c3_stack_bottom, sz });
+    const sz = @as(u32, @intFromPtr(&sections._rv32_stack_top)) - @as(u32, @intFromPtr(&sections._rv32_stack_bottom));
+    _ = try logWriter.print("STACK: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._rv32_stack_top, &sections._rv32_stack_bottom, sz });
 }
 
 pub fn showDataInfo() !void {
-    const sz = @as(u32, @intFromPtr(&sections._c3_data_end)) - @as(u32, @intFromPtr(&sections._c3_data_start));
-    _ = try logWriter.print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_data_end, &sections._c3_data_start, sz });
+    const sz = @as(u32, @intFromPtr(&sections._rv32_data_end)) - @as(u32, @intFromPtr(&sections._rv32_data_start));
+    _ = try logWriter.print("DATA: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._rv32_data_end, &sections._rv32_data_start, sz });
 }
 
 pub fn showBssInfo() !void {
-    const sz = @as(u32, @intFromPtr(&sections._c3_bss_end)) - @as(u32, @intFromPtr(&sections._c3_bss_start));
-    _ = try logWriter.print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_bss_end, &sections._c3_bss_start, sz });
+    const sz = @as(u32, @intFromPtr(&sections._rv32_bss_end)) - @as(u32, @intFromPtr(&sections._rv32_bss_start));
+    _ = try logWriter.print("BSS: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._rv32_bss_end, &sections._rv32_bss_start, sz });
 }
 
 pub fn showTextInfo() !void {
-    const sz = @as(u32, @intFromPtr(&sections._c3_text_end)) - @as(u32, @intFromPtr(&sections._c3_text_start));
-    _ = try logWriter.print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_text_end, &sections._c3_text_start, sz });
+    const sz = @as(u32, @intFromPtr(&sections._rv32_text_end)) - @as(u32, @intFromPtr(&sections._rv32_text_start));
+    _ = try logWriter.print("TEXT: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._rv32_text_end, &sections._rv32_text_start, sz });
 }
 
 pub fn showHeapInfo() !void {
-    const sz = @as(u32, @intFromPtr(&sections._c3_heap_size));
-    _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._c3_heap_start, &sections._c3_heap_end, sz });
+    const sz = @as(u32, @intFromPtr(&sections._rv32_heap_size));
+    _ = try logWriter.print("HEAP: top: {any} bottom: {any} size: {d}\r\n", .{ &sections._rv32_heap_start, &sections._rv32_heap_end, sz });
 }
 
 pub fn showInterruptInfo() !void {
     const mtvec_addr = Riscv.r_mtvec();
-    _ = try logWriter.print("INTERRUPT VECOTR TABLE AT: {any}  mtvec set to: 0x{x} \r\n", .{ &sections._c3_interrupt_vectors, mtvec_addr });
+    _ = try logWriter.print("INTERRUPT VECOTR TABLE AT: {any}  mtvec set to: 0x{x} \r\n", .{ &sections._rv32_interrupt_vectors, mtvec_addr });
 }
 
 //std.options.logFn(comptime message_level: log.Level, comptime scope: @TypeOf(.enum_literal), comptime format: []const u8, args: anytype)
@@ -345,9 +346,9 @@ pub fn hang() noreturn {
 }
 
 pub fn setInterruptVector(id: usize, handler: fn () callconv(.C) noreturn) void {
-    var vector_table = @as([*]volatile u32, @constCast(@ptrCast(@alignCast(&sections._c3_interrupt_vectors))));
+    var vector_table = @as([*]volatile u32, @constCast(@ptrCast(@alignCast(&sections._rv32_interrupt_vectors))));
     const hu32 = @as(u32, @intFromPtr(&handler));
-    //const vector_table = @as([*]volatile u32, @ptrFromInt(&sections._c3_interrupt_vectors));
+    //const vector_table = @as([*]volatile u32, @ptrFromInt(&sections._rv32_interrupt_vectors));
     vector_table[id] = hu32;
 }
 

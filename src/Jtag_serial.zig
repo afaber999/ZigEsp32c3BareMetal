@@ -1,5 +1,5 @@
 const std = @import("std");
-const c3 = @import("c3.zig");
+const rv32 = @import("rv32.zig");
 
 const Self = @This();
 
@@ -45,7 +45,7 @@ pub fn readNonBlocking(c: *u8) bool {
 pub fn read() u8 {
     var ret: u8 = 0;
     while (!readNonBlocking(&ret)) {
-        c3.spin(1);
+        rv32.spin(1);
     }
     return ret;
 }
@@ -60,6 +60,6 @@ pub fn writeNonBlocking(c: u8) bool {
 
 pub fn write(c: u8) void {
     while (!writeNonBlocking(c)) {
-        c3.spin(1);
+        rv32.spin(1);
     }
 }

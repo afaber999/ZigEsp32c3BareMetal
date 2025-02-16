@@ -7,14 +7,14 @@
 
 led_on:
     lui	a0,0x60004
-    lw	a1,4(a0) # 60004004 <_c3_data_load_start+0x1e003f24>
+    lw	a1,4(a0) # 60004004 <_rv32_data_load_start+0x1e003f24>
     or	a1,a1,512
     sw	a1,4(a0)
     ret
     
 led_off:
     lui	a0,0x60004
-    lw	a1,4(a0) # 60004004 <_c3_data_load_start+0x1e003f24>
+    lw	a1,4(a0) # 60004004 <_rv32_data_load_start+0x1e003f24>
     andi	a1,a1,-513
     sw	a1,4(a0)
     ret

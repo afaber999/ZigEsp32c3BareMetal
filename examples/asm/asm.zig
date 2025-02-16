@@ -4,7 +4,7 @@
 // In addition, the assembly code also has function that toggles a LED (9) on and off.
 // And demonstrates how to share a global variable between asm and zig
 const std = @import("std");
-const c3 = @import("c3");
+const rv32 = @import("rv32");
 
 extern fn add_numbers(a: i32, b: i32) callconv(.C) i32;
 extern fn led_on() callconv(.C) void;
@@ -17,25 +17,25 @@ extern var glob_counts: i32;
 // note: this is not the default WS2812 LED that is a DEVKIT board
 const PIN = 9;
 
-export fn _c3Start() noreturn {
-    c3.wdt_disable();
-    c3.logWriter.print("ASMTESTER v001 \r\n", .{}) catch unreachable;
+export fn _rv32Start() noreturn {
+    rv32.wdt_disable();
+    rv32.logWriter.print("ASMTESTER v001 \r\n", .{}) catch unreachable;
     main() catch unreachable;
-    c3.hang();
+    rv32.hang();
 }
 
 pub fn main() !void {
-    c3.Gpio.output_enable(PIN, true);
-    c3.Gpio.output(PIN);
+    rv32.Gpio.output_enable(PIN, true);
+    rv32.Gpio.output(PIN);
 
     while (true) {
         const result = add_numbers(10, 20);
-        c3.logWriter.print("ASM TESTER, glob count: {d}, add result - {d} \r\n", .{ glob_counts, result }) catch unreachable;
+        rv32.logWriter.print("ASM TESTER, glob count: {d}, add result - {d} \r\n", .{ glob_counts, result }) catch unreachable;
 
         led_on();
-        c3.delay_ms(300);
+        rv32.delay_ms(300);
         led_off();
-        c3.delay_ms(700);
+        rv32.delay_ms(700);
         inc_glob_counts();
     }
 }

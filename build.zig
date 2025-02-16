@@ -62,9 +62,9 @@ pub fn build(b: *std.Build) void {
         "-fno-omit-frame-pointer",
     };
 
-    const c3ModuleName = "c3";
-    const c3Module = b.addModule(c3ModuleName, .{ .root_source_file = b.path("src/c3.zig") });
-    c3Module.addCSourceFile(.{ .file = b.path("./src/c3.S"), .flags = cflags });
+    const rv32ModuleName = "rv32";
+    const rv32Module = b.addModule(rv32ModuleName, .{ .root_source_file = b.path("src/rv32.zig") });
+    rv32Module.addCSourceFile(.{ .file = b.path("./src/rv32.S"), .flags = cflags });
 
     inline for (Examples) |example| {
         const firmware = b.addExecutable(.{
@@ -77,7 +77,7 @@ pub fn build(b: *std.Build) void {
 
         //firmware.root_module.strip = false;
         firmware.root_module.strip = false;
-        firmware.root_module.addImport(c3ModuleName, c3Module);
+        firmware.root_module.addImport(rv32ModuleName, rv32Module);
 
         firmware.setVerboseLink(true);
 

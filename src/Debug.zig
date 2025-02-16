@@ -1,6 +1,6 @@
-const c3 = @import("c3.zig");
+const rv32 = @import("rv32.zig");
 
-const uart = c3.Reg.uart0;
+const uart = rv32.Reg.uart0;
 
 pub fn print_new_line() void {
     uart[0] = 0x0A;
@@ -46,7 +46,7 @@ pub fn dump_mem(ptr: [*]const u8, len: usize) void {
         uart[0] = '-';
         uart[0] = ' ';
 
-        c3.spin(50000);
+        rv32.spin(50000);
 
         for (0..16) |j| {
             const v = ptr[i + j];

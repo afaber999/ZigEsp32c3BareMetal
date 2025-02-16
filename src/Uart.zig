@@ -1,5 +1,5 @@
 const std = @import("std");
-const c3 = @import("c3.zig");
+const rv32 = @import("rv32.zig");
 
 pub const Uart0 = Uart(0);
 pub const Uart1 = Uart(1);
@@ -18,8 +18,8 @@ fn Uart(comptime n: usize) type {
         const Self = @This();
 
         const _regs: [*]volatile u32 = switch (n) {
-            0 => c3.Reg.uart0,
-            1 => c3.Reg.uart1,
+            0 => rv32.Reg.uart0,
+            1 => rv32.Reg.uart1,
             else => @compileError("Unknown UART number"),
         };
 
@@ -66,7 +66,7 @@ fn Uart(comptime n: usize) type {
         pub fn read() u8 {
             var ret: u8 = 0;
             while (!readNonBlocking(&ret)) {
-                c3.spin(1);
+                rv32.spin(1);
             }
             return ret;
         }
@@ -81,7 +81,7 @@ fn Uart(comptime n: usize) type {
 
         pub fn write(c: u8) void {
             while (!writeNonBlocking(c)) {
-                c3.spin(1);
+                rv32.spin(1);
             }
         }
     };

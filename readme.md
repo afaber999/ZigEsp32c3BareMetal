@@ -42,8 +42,8 @@ zig build
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/zig-esp32c3-baremetal.git
-   cd zig-esp32c3-baremetal
+   git clone https://github.com/yourusername/zig-esp32rv32-baremetal.git
+   cd zig-esp32rv32-baremetal
 
 2. run zig_build to compile everything
 3. flash an example project using zig build run_xxxxx where xxxx is the sample name, following samples are included
@@ -72,27 +72,27 @@ Mini rv32: https://github.com/ringtailsoftware/zig-minirv32
 MicroZig : https://github.com/ZigEmbeddedGroup/microzig
 MDK : https://github.com/cpq/mdk
 RISC-V-Devkit-for-ESP32C3: https://github.com/AlexManoJAM/RISC-V-Devkit-for-ESP32C3
-Direct Boot example: https://github.com/espressif/esp32c3-direct-boot-example
-esp32c3_baremetal: https://github.com/skagus/esp32c3_baremetal/tree/main/esp32c3
-zig esp32c3 vector example: https://github.com/JohnnyZig/zig-risv32-link-fail
-c3dk https://github.com/j0hax/c3dk 
+Direct Boot example: https://github.com/espressif/esp32rv32-direct-boot-example
+esp32rv32_baremetal: https://github.com/skagus/esp32rv32_baremetal/tree/main/esp32rv32
+zig esp32rv32 vector example: https://github.com/JohnnyZig/zig-risv32-link-fail
+rv32dk https://github.com/j0hax/rv32dk 
 esptool
 
 
 # my notes, TODO remove, please ignore
 riscv64-unknown-elf-objdump  -D ./zig-out/bin/zfirmware.elf > firmware.dis
-./esptool.exe --chip esp32c3 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB ./zig-out/bin/firmware.elf
+./esptool.exe --chip esp32rv32 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB ./zig-out/bin/firmware.elf
 
 
-esptool.exe --chip esp32c3 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB ./zig-out/bin/zfirmware.elf 
+esptool.exe --chip esp32rv32 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB ./zig-out/bin/zfirmware.elf 
 esptool.exe  write_flash 0 ./zig-out/bin/zfirmware.bin
 
-//esptool.exe --chip esp32c3 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB $(PROG).elf
+//esptool.exe --chip esp32rv32 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB $(PROG).elf
 $ riscv64-unknown-elf-objdump.exe  -t -h ./zig-out/bin/zfirmware.elf 
 
 
 # debugging:
 
-openocd_esp/bin/openocd -c "gdb_port 50007" -c "tcl_port 50008" -f "openocd_esp/support/openocd-helpers.tcl" -f board/esp32c3-builtin.cfg -d3
+openocd_esp/bin/openocd -c "gdb_port 50007" -c "tcl_port 50008" -f "openocd_esp/support/openocd-helpers.tcl" -f board/esp32rv32-builtin.cfg -d3
 
 

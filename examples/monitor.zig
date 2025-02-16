@@ -1,18 +1,18 @@
 const std = @import("std");
-const c3 = @import("c3");
+const rv32 = @import("rv32");
 const ascii = std.ascii.control_code;
 
-const tr = c3.Uart0.read;
-const tw = c3.uart0.writer();
+const tr = rv32.Uart0.read;
+const tw = rv32.uart0.writer();
 
 var cmdbuf = std.mem.zeroes([128]u8);
 var cmdbuf_len: usize = 0;
 
-export fn _c3Start() noreturn {
-    c3.wdt_disable();
+export fn _rv32Start() noreturn {
+    rv32.wdt_disable();
     _ = tw.write("Monitor example v001\r\n") catch unreachable;
     main() catch {};
-    c3.hang();
+    rv32.hang();
 }
 
 pub fn main() !void {
@@ -54,11 +54,11 @@ pub fn main() !void {
         _ = try tw.print("buffer: {any}\r\n", .{cmd});
 
         if (std.mem.startsWith(u8, cmd, "I")) {
-            try c3.showTextInfo();
-            try c3.showDataInfo();
-            try c3.showBssInfo();
-            try c3.showStackInfo();
-            try c3.showHeapInfo();
+            try rv32.showTextInfo();
+            try rv32.showDataInfo();
+            try rv32.showBssInfo();
+            try rv32.showStackInfo();
+            try rv32.showHeapInfo();
         }
         cmdbuf_len = 0;
     }

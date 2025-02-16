@@ -1,7 +1,6 @@
 const std = @import("std");
-const c3 = @import("c3.zig");
+const rv32 = @import("rv32.zig");
 const mmio = @import("mmio.zig");
-
 
 pub const CORE0_CPU_INT_THRESH = 0x194;
 pub const CORE0_MAC_INTR_MAP = 0x000;
@@ -75,23 +74,23 @@ pub const CORE0_CPU_INT_CLEAR = 0x10C;
 pub const CORE0_CPU_INT_EIP_STATUS = 0x110;
 pub const CORE0_CPU_INT_PRI_0 = 0x114;
 
-const _regs: [*]volatile u32 = c3.Reg.interrupt;
+const _regs: [*]volatile u32 = rv32.Reg.interrupt;
 
 pub inline fn eipStatuCor0() u32 {
     return _regs[CORE0_CPU_INT_EIP_STATUS / 4];
 }
 
 pub inline fn enableCor0(interrupt: u5) void {
-    _regs[CORE0_CPU_INT_ENABLE / 4] |= c3.Bit(interrupt);
+    _regs[CORE0_CPU_INT_ENABLE / 4] |= rv32.Bit(interrupt);
 }
 
 pub inline fn disableCor0(interrupt: u5) void {
-    _regs[CORE0_CPU_INT_ENABLE / 4] |= c3.Bit(interrupt);
+    _regs[CORE0_CPU_INT_ENABLE / 4] |= rv32.Bit(interrupt);
 }
 
 // AF DECL ENUM for u1 (edge/level)
 pub inline fn setIntType(interrupt: u5, tp: u1) void {
-    c3.Reg.setOrClearBit(&_regs[CORE0_CPU_INT_TYPE / 4], interrupt, tp != 0);
+    rv32.Reg.setOrClearBit(&_regs[CORE0_CPU_INT_TYPE / 4], interrupt, tp != 0);
 }
 
 pub inline fn setIntPri(interrupt: u5, level: u4) void {
@@ -107,7 +106,7 @@ pub inline fn setPrioThreshold(threshold: u4) void {
 // for levle triggered interrupts, this is not necessary
 // once should clear the interrupt source instead
 pub inline fn clearPendingInterrupt(interrupt: u5) void {
-    _regs[CORE0_CPU_INT_CLEAR / 4] |= c3.Bit(interrupt);
+    _regs[CORE0_CPU_INT_CLEAR / 4] |= rv32.Bit(interrupt);
 }
 
 pub inline fn clearAllPendingInterrupts() void {
@@ -158,10 +157,10 @@ pub fn make_isr_handler(comptime irq_nr: usize, comptime func: anytype) type {
         pub const fn_name = nameOf.Fn(func);
 
         pub fn isr_vector() callconv(.Naked) void {
-            c3.Riscv.push_interrupt_state();
+            rv32.Riscv.push_interrupt_state();
             asm volatile ("jal " ++ fn_name ::: "memory");
-            c3.Riscv.pop_interrupt_state();
-            c3.Riscv.interrupt_return();
+            rv32.Riscv.pop_interrupt_state();
+            rv32.Riscv.interrupt_return();
         }
         comptime {
             const options = .{ .name = exported_name };

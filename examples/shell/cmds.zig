@@ -1,6 +1,6 @@
 const std = @import("std");
 const shell = @import("shell.zig");
-const c3 = @import("c3");
+const rv32 = @import("rv32");
 
 const tw = shell.tw;
 
@@ -17,20 +17,20 @@ fn ledCmd(args: shell.ArgList) shell.CmdErr!void {
     }
 
     const val = std.fmt.parseInt(u32, args[1], 10) catch 0; // if it parses and > 0, default to 0
-    c3.Gpio.output(LED_PIN);
-    c3.Gpio.write(LED_PIN, val > 0);
+    rv32.Gpio.output(LED_PIN);
+    rv32.Gpio.write(LED_PIN, val > 0);
 }
 
 fn sysInfoCmd(args: shell.ArgList) shell.CmdErr!void {
     _ = args;
     _ = try tw.print("System Info\n", .{});
-    try c3.showTextInfo();
-    try c3.showDataInfo();
-    try c3.showBssInfo();
-    try c3.showStackInfo();
-    try c3.showHeapInfo();
-    try c3.showInterruptInfo();
-    try c3.showInterruptVectors();
+    try rv32.showTextInfo();
+    try rv32.showDataInfo();
+    try rv32.showBssInfo();
+    try rv32.showStackInfo();
+    try rv32.showHeapInfo();
+    try rv32.showInterruptInfo();
+    try rv32.showInterruptVectors();
 }
 
 // register commands with shell (comptime)

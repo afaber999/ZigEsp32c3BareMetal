@@ -1,29 +1,29 @@
 const std = @import("std");
-const c3 = @import("c3");
+const rv32 = @import("rv32");
 
-export fn _c3Start() noreturn {
-    c3.wdt_disable();
-    c3.logWriter.print("Sysinfo example v001\r\n", .{}) catch unreachable;
+export fn _rv32Start() noreturn {
+    rv32.wdt_disable();
+    rv32.logWriter.print("Sysinfo example v001\r\n", .{}) catch unreachable;
     main() catch {};
-    c3.hang();
+    rv32.hang();
 }
 
 pub fn main() !void {
     while (true) {
-        try c3.showTextInfo();
-        try c3.showDataInfo();
-        try c3.showBssInfo();
-        try c3.showStackInfo();
-        try c3.showHeapInfo();
-        try c3.showInterruptInfo();
-        try c3.showInterruptVectors();
+        try rv32.showTextInfo();
+        try rv32.showDataInfo();
+        try rv32.showBssInfo();
+        try rv32.showStackInfo();
+        try rv32.showHeapInfo();
+        try rv32.showInterruptInfo();
+        try rv32.showInterruptVectors();
 
-        c3.system.ptr.PERIP_CLK_EN0.modify(.{ .LEDC_CLK_EN = 1 });
-        try c3.logWriter.print("getPeriClkEn0 {any}\r\n", .{c3.system.ptr.PERIP_CLK_EN0.read()});
+        rv32.system.ptr.PERIP_CLK_EN0.modify(.{ .LEDC_CLK_EN = 1 });
+        try rv32.logWriter.print("getPeriClkEn0 {any}\r\n", .{rv32.system.ptr.PERIP_CLK_EN0.read()});
 
-        // const v = c3.system.ptr.*;
-        // try c3.logWriter.print("Systemptr: {any}\r\n", .{v});
+        // const v = rv32.system.ptr.*;
+        // try rv32.logWriter.print("Systemptr: {any}\r\n", .{v});
 
-        c3.delay_ms(1000);
+        rv32.delay_ms(1000);
     }
 }

@@ -1,5 +1,5 @@
 const std = @import("std");
-const c3 = @import("c3");
+const rv32 = @import("rv32");
 
 // const Ledc = struct {
 //     pub const CH0_CONF0_REG = 0x0000;
@@ -47,7 +47,7 @@ const c3 = @import("c3");
 //     pub const INT_CLR_REG = 0x00CC;
 //     pub const DATE_REG = 0x00FC;
 
-//     _regs = c3.Reg.ledc,
+//     _regs = rv32.Reg.ledc,
 
 //     pub fn init() Ledc {
 //         return Ledc{
@@ -58,22 +58,22 @@ const c3 = @import("c3");
 
 var ledc = undefined;
 
-// var LEDC_APB_CLK_SEL = c3.Reg.system[0x3C / 4];
+// var LEDC_APB_CLK_SEL = rv32.Reg.system[0x3C / 4];
 
 const PIN = 9;
 
 pub const std_options = std.Options{
     .log_level = std.log.Level.debug,
-    .logFn = c3.logFn,
+    .logFn = rv32.logFn,
 };
 pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
     std.log.err("PANIC: {s} at {any} \r\n", .{ message, addr });
     @breakpoint();
-    c3.hang();
+    rv32.hang();
 }
 
-export fn _c3Start() noreturn {
-    c3.wdt_disable();
+export fn _rv32Start() noreturn {
+    rv32.wdt_disable();
     setup();
     while (true) {
         loop() catch {};
@@ -85,17 +85,17 @@ var loops: u32 = 0;
 pub fn setup() void {
 
 
-    c3.Gpio.output_enable(PIN, true);
-    c3.Gpio.output(PIN);
-    c3.Gpio.write(PIN, true);
-    //c3.logWriter.info("Starting ledcapp v001 \r\n", .{});
+    rv32.Gpio.output_enable(PIN, true);
+    rv32.Gpio.output(PIN);
+    rv32.Gpio.write(PIN, true);
+    //rv32.logWriter.info("Starting ledcapp v001 \r\n", .{});
 
     // ledc = Ledc.init();
 
     // // set APB_CLK (80 Mhz)
     // // bit 01 : 1: APB_CLK; 2: RC_FAST_CLK; 3: XTAL_CLK. (R/W)
     // // bit 31 : clock enable
-    // ledc[Ledc.LEDC_CONF_REG / 4] = 0x01 | c3.Bit(31);
+    // ledc[Ledc.LEDC_CONF_REG / 4] = 0x01 | rv32.Bit(31);
 
     // // configure timer 0
     // var reg = 0x00;
@@ -107,14 +107,14 @@ pub fn setup() void {
 }
 
 pub fn loop() !void {
-    c3.system.ptr.PERIP_CLK_EN0.modify(.{ .LEDC_CLK_EN = 1 });
-    try c3.logWriter.print("getPeriClkEn0 {any}\r\n", .{c3.system.ptr.PERIP_CLK_EN0.read()});
+    rv32.system.ptr.PERIP_CLK_EN0.modify(.{ .LEDC_CLK_EN = 1 });
+    try rv32.logWriter.print("getPeriClkEn0 {any}\r\n", .{rv32.system.ptr.PERIP_CLK_EN0.read()});
 
     std.log.debug("LOGGING FROM STD LOG DEBUG V {}", .{0});
-    c3.Gpio.write(PIN, true);
-    c3.delay_ms(200);
-    c3.Gpio.write(PIN, false);
-    c3.delay_ms(200);
+    rv32.Gpio.write(PIN, true);
+    rv32.delay_ms(200);
+    rv32.Gpio.write(PIN, false);
+    rv32.delay_ms(200);
 }
 
 

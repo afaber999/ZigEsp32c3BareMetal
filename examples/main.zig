@@ -1,16 +1,16 @@
 const std = @import("std");
-const c3 = @import("c3");
-var term = c3.uart0.writer();
+const rv32 = @import("rv32");
+var term = rv32.uart0.writer();
 
 const PIN = 9;
 
 pub const std_options = std.Options{
     .log_level = std.log.Level.debug,
-    .logFn = c3.logFn,
+    .logFn = rv32.logFn,
 };
 
-export fn _c3Start() noreturn {
-    c3.wdt_disable();
+export fn _rv32Start() noreturn {
+    rv32.wdt_disable();
     setup();
     while (true) {
         loop() catch {};
@@ -18,15 +18,15 @@ export fn _c3Start() noreturn {
 }
 
 pub fn setup() void {
-    c3.Gpio.output_enable(PIN, true);
-    c3.Gpio.output(PIN);
-    c3.Gpio.write(PIN, true);
-    c3.delay_ms(5000);
-    c3.Gpio.write(PIN, false);
+    rv32.Gpio.output_enable(PIN, true);
+    rv32.Gpio.output(PIN);
+    rv32.Gpio.write(PIN, true);
+    rv32.delay_ms(5000);
+    rv32.Gpio.write(PIN, false);
 
-    c3.logWriter.print("Starting test app v001 \r\n", .{}) catch unreachable;
+    rv32.logWriter.print("Starting test app v001 \r\n", .{}) catch unreachable;
     // for ("Setup completed version 0.000001 test code long string see if it does not miss any characters!\n") |ch| {
-    //     c3.Uart0.write(@intCast(ch));
+    //     rv32.Uart0.write(@intCast(ch));
     // }
 }
 
@@ -36,31 +36,31 @@ var test_data: u32 = 0xBABEFACE;
 pub fn panic(message: []const u8, _: ?*std.builtin.StackTrace, addr: ?usize) noreturn {
     std.log.err("PANIC: {s} at {any} \r\n", .{ message, addr });
     @breakpoint();
-    c3.hang();
+    rv32.hang();
 }
 
 pub fn test_ws2812() void {
     @setRuntimeSafety(false);
 
     const wsPin = 8;
-    c3.Gpio.output_enable(wsPin, true);
-    c3.Gpio.output(wsPin);
-    c3.Gpio.write(wsPin, false);
+    rv32.Gpio.output_enable(wsPin, true);
+    rv32.Gpio.output(wsPin);
+    rv32.Gpio.write(wsPin, false);
 
     for (0..8) |_| {
-        c3.Gpio.write(wsPin, true);
-        c3.spin(6);
-        c3.Gpio.write(wsPin, false);
-        c3.spin(2);
+        rv32.Gpio.write(wsPin, true);
+        rv32.spin(6);
+        rv32.Gpio.write(wsPin, false);
+        rv32.spin(2);
     }
 
-    c3.delay_ms(1000);
+    rv32.delay_ms(1000);
 
     // for (0..24) |_| {
-    //     c3.Gpio.write(wsPin, true);
-    //     c3.spin(2);
-    //     c3.Gpio.write(wsPin, false);
-    //     c3.spin(6);
+    //     rv32.Gpio.write(wsPin, true);
+    //     rv32.spin(2);
+    //     rv32.Gpio.write(wsPin, false);
+    //     rv32.spin(6);
     // }
 }
 
@@ -78,10 +78,10 @@ pub fn test_ws2812() void {
 // //   }
 // // }
 
-//     c3.Gpio.write(PIN, true);
-//     c3.delay_ms(300);
-//     c3.Gpio.write(PIN, false);
-//     c3.delay_ms(700);
+//     rv32.Gpio.write(PIN, true);
+//     rv32.delay_ms(300);
+//     rv32.Gpio.write(PIN, false);
+//     rv32.delay_ms(700);
 // }
 
 pub fn loop() !void {
@@ -89,28 +89,28 @@ pub fn loop() !void {
 
     test_ws2812();
 
-    try c3.showTextInfo();
-    try c3.showDataInfo();
-    try c3.showBssInfo();
-    try c3.showStackInfo();
-    try c3.showHeapInfo();
+    try rv32.showTextInfo();
+    try rv32.showDataInfo();
+    try rv32.showBssInfo();
+    try rv32.showStackInfo();
+    try rv32.showHeapInfo();
 
     _ = try term.write("\r\n");
     for ('A'..'Z') |ch| {
-        c3.Gpio.write(PIN, true);
-        c3.delay_ms(50);
-        c3.Gpio.write(PIN, false);
-        c3.delay_ms(50);
+        rv32.Gpio.write(PIN, true);
+        rv32.delay_ms(50);
+        rv32.Gpio.write(PIN, false);
+        rv32.delay_ms(50);
 
         _ = ch;
         //Reg.write(Reg.C3_UART, @intCast(ch));
-        //c3.Reg.uart[0] = @intCast(ch);
+        //rv32.Reg.uart[0] = @intCast(ch);
     }
     // _ = try tw.write("-------------------------\r\n");
 
-    c3.Gpio.write(PIN, true);
-    c3.Gpio.write(PIN, false);
-    c3.delay_ms(2000);
+    rv32.Gpio.write(PIN, true);
+    rv32.Gpio.write(PIN, false);
+    rv32.delay_ms(2000);
 
     // loops += 1;
 
@@ -120,7 +120,7 @@ pub fn loop() !void {
 
     // //if ((loop % 5) == 0) {
     // _ = try tw.write("TEST ALLOCATOR \r\n");
-    // var allocator = c3.heapAllocator();
+    // var allocator = rv32.heapAllocator();
     // _ = try tw.write("OK \r\n");
     // var buf = try allocator.alloc(u8, 0x100);
     // defer allocator.free(buf);

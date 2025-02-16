@@ -1,6 +1,6 @@
 const std = @import("std");
 const cmds = @import("cmds.zig");
-const c3 = @import("c3");
+const rv32 = @import("rv32");
 
 const cmdTable = cmds.cmdTable;
 const ascii = std.ascii.control_code;
@@ -12,7 +12,7 @@ var got_line: bool = false;
 var cmdbuf: [CMDBUF_SIZE_BYTES + 1]u8 = .{0} ** (CMDBUF_SIZE_BYTES + 1);
 var cmdbuf_len: usize = 0;
 
-pub var tw = c3.uart0.writer();
+pub var tw = rv32.uart0.writer();
 
 // type definitions
 pub const ArgList = [][]const u8;
@@ -20,7 +20,7 @@ pub const CmdHandler = *const fn (args: ArgList) CmdErr!void; // function pointe
 
 pub fn getch() ?u8 {
     var ch: u8 = undefined;
-    if (c3.Uart0.readNonBlocking(&ch)) return ch;
+    if (rv32.Uart0.readNonBlocking(&ch)) return ch;
     return null;
 }
 
