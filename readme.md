@@ -73,9 +73,9 @@ MicroZig : https://github.com/ZigEmbeddedGroup/microzig
 MDK : https://github.com/cpq/mdk
 RISC-V-Devkit-for-ESP32C3: https://github.com/AlexManoJAM/RISC-V-Devkit-for-ESP32C3
 Direct Boot example: https://github.com/espressif/esp32rv32-direct-boot-example
-esp32rv32_baremetal: https://github.com/skagus/esp32rv32_baremetal/tree/main/esp32rv32
-zig esp32rv32 vector example: https://github.com/JohnnyZig/zig-risv32-link-fail
-rv32dk https://github.com/j0hax/rv32dk 
+esp32c3_baremetal: https://github.com/skagus/esp32c3_baremetal/tree/main/esp32c3
+zig esp32c3 vector example: https://github.com/JohnnyZig/zig-risv32-link-fail
+rv32dk https://github.com/j0hax/c3dk 
 esptool
 
 

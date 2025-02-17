@@ -1,9 +1,11 @@
 const std = @import("std");
 const rv32 = @import("rv32.zig");
+const chip = @import("chip.zig");
+const peripherals = chip.devices.@"ESP32-C3".peripherals;
+
+pub const ptr = peripherals.SYSTIMER;
 
 pub const CONF = 0x0000;
-pub const UNIT0_OP = 0x0004;
-pub const UNIT1_OP = 0x0008;
 
 pub const UNIT0_LOAD_HI = 0x000C;
 pub const UNIT0_LOAD_LO = 0x0010;
@@ -57,19 +59,29 @@ pub fn load(unit: u1, hi: u32, lo: u32) void {
 
 pub fn readUnit0() u64 {
     // system timer runs on 16 MHZ thus 16 ticks per microsecond
-    _regs[UNIT0_OP / 4] = rv32.Bit(30); // TRM 10.5, update Unit0
-    rv32.spin(1);
+    ptr.UNIT0_OP.modify(.{ .TIMER_UNIT0_UPDATE = 1 });
 
-    const hi = _regs[UNIT0_VALUE_HI / 4];
-    const lo = _regs[UNIT0_VALUE_LO / 4];
+    while (ptr.UNIT0_OP.read().TIMER_UNIT0_VALUE_VALID == 0) {
+        // wait for update to complete
+    }
+
+    const lo = ptr.UNIT0_VALUE_LO.read().TIMER_UNIT0_VALUE_LO;
+    const hi = ptr.UNIT0_VALUE_HI.read().TIMER_UNIT0_VALUE_HI;
+
     return (@as(u64, hi) << 32) | @as(u64, lo);
 }
 
 pub fn readUnit1() u64 {
-    _regs[UNIT1_OP / 4] = rv32.Bit(30); // TRM 10.5, update Unit1
-    rv32.spin(1);
-    const hi = _regs[UNIT1_VALUE_HI / 4];
-    const lo = _regs[UNIT1_VALUE_LO / 4];
+    // system timer runs on 16 MHZ thus 16 ticks per microsecond
+    ptr.UNIT1_OP.modify(.{ .TIMER_UNIT1_UPDATE = 1 });
+
+    while (ptr.UNIT1_OP.read().TIMER_UNIT1_VALUE_VALID == 0) {
+        // wait for update to complete
+    }
+
+    const lo = ptr.UNIT1_VALUE_LO.read().TIMER_UNIT1_VALUE_LO;
+    const hi = ptr.UNIT1_VALUE_HI.read().TIMER_UNIT1_VALUE_HI;
+
     return (@as(u64, hi) << 32) | @as(u64, lo);
 }
 
@@ -153,5 +165,3 @@ pub fn readRawInterruptStatus() u32 {
 pub fn readMaskedInterruptStatus() u32 {
     return _regs[INT_ST / 4];
 }
-
-

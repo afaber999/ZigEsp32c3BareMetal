@@ -30,6 +30,7 @@ const Examples = [_]Sample{
     Sample.init("shell", "examples/shell/main.zig", "src/link.ld", null),
     Sample.init("ledc", "examples/ledc.zig", "src/link.ld", null),
     Sample.init("timer0", "examples/timer0.zig", "src/link.ld", null),
+    Sample.init("clocks", "examples/clocks.zig", "src/link.ld", null),
 };
 
 pub fn build(b: *std.Build) void {
