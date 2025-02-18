@@ -347,3 +347,21 @@ pub fn showInterruptVectors() !void {
         _ = try logWriter.print("INTERRUPT VECTOR: {d} -> 0x{x}\r\n", .{ i, vector_table[i] });
     }
 }
+
+pub fn set_clock_xtal(prediv: u10) void {
+    // CPU_CLK = XTAL_CLK/(SYSTEM_PRE_DIV_CNT + 1)  (XTAL_CLK = 40Mhz)
+    // SYSTEM_PRE_DIV_CNT ranges from 0 ~ 1023. Default is 1 -> CPU_CLK = 20Mhz
+
+    // Setup clocks, TRM section 6.2.4.1
+    // TRM register 14.10, tables 6-2 and 6-4
+    system.ptr.CPU_PER_CONF.modify(.{ .CPUPERIOD_SEL = 0b01 });
+    system.ptr.SYSCLK_CONF.modify(.{ .SOC_CLK_SEL = 0b00, .CLK_DIV_EN = 0b1, .PRE_DIV_CNT = prediv });
+}
+
+pub fn set_clock_pll(max_speed: bool) void {
+    // Setup clocks, TRM section 6.2.4.1
+    // TRM register 14.10, tables 6-2 and 6-4
+    const sel2: u1 = if (max_speed) 1 else 0;
+    system.ptr.CPU_PER_CONF.modify(.{ .CPUPERIOD_SEL = sel2, .PLL_FREQ_SEL = 0b1 });
+    system.ptr.SYSCLK_CONF.modify(.{ .SOC_CLK_SEL = 0b01, .CLK_DIV_EN = 0b1 });
+}

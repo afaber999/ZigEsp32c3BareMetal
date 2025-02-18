@@ -20,7 +20,7 @@ export fn cpu0_isr_handler() callconv(.C) void {
         rv32.Gpio.write(LED_PIN, false);
     }
     // have to clear the software interrupt
-    rv32.system.setCpuIntr(0,0);
+    rv32.system.setCpuIntr(0, 0);
     num_ints[1] += 1;
 }
 
@@ -57,13 +57,15 @@ pub fn main() !void {
     rv32.Interrupt.enableCor0(int_1); // Enable the interrupt 1
     rv32.Interrupt.setIntType(int_1, 0); // level interrupt for int 1
     rv32.Interrupt.setIntPri(int_1, 2); // priority 2 for int 1
-    rv32.Interrupt.map_core0_cpu_intr_0(int_1); // map cpu intr 0 to interrupt 1
+    //rv32.Interrupt.map_core0_cpu_intr_0(int_1); // map cpu intr 0 to interrupt 1
+    rv32.Interrupt.core0.CPU_INTR_FROM_CPU_0_MAP.modify(.{ .CPU_INTR_FROM_CPU_0_MAP = int_1 });
 
     // setup interrupt 2 (timer interrupt)
     rv32.Interrupt.enableCor0(int_2); // Enable the interrupt 2
     rv32.Interrupt.setIntType(int_2, 0); // level interrupt for int 2
     rv32.Interrupt.setIntPri(int_2, 2); // priority 2 for int 2
-    rv32.Interrupt.map_core0_systimer_target0(int_2); // map systimer target 0 to interrupt 2
+    //rv32.Interrupt.map_core0_systimer_target0(int_2); // map systimer target 0 to interrupt 2
+    rv32.Interrupt.core0.SYSTIMER_TARGET0_INT_MAP.modify(.{ .SYSTIMER_TARGET0_INT_MAP = int_2 });
 
     rv32.Interrupt.setPrioThreshold(1); // priority threshold 1
     rv32.Riscv.enable_interrupts();

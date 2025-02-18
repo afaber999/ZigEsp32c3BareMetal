@@ -49,11 +49,11 @@ pub const _regs: [*]volatile u32 = rv32.Reg.systimer;
 
 pub fn load(unit: u1, hi: u32, lo: u32) void {
     if (unit == 0) {
-        _regs[UNIT0_LOAD_HI / 4] = hi;
-        _regs[UNIT0_LOAD_LO / 4] = lo;
+        ptr.UNIT0_LOAD_HI.modify(.{ .TIMER_UNIT0_LOAD_HI = hi });
+        ptr.UNIT0_LOAD_LO.modify(.{ .TIMER_UNIT0_LOAD_LO = lo });
     } else {
-        _regs[UNIT1_LOAD_HI / 4] = hi;
-        _regs[UNIT1_LOAD_LO / 4] = lo;
+        ptr.UNIT1_LOAD_HI.modify(.{ .TIMER_UNIT1_LOAD_HI = hi });
+        ptr.UNIT1_LOAD_LO.modify(.{ .TIMER_UNIT1_LOAD_LO = lo });
     }
 }
 

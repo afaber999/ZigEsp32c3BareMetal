@@ -34,46 +34,35 @@ pub fn nnops(n: u32) void {
     }
 }
 
-pub fn nadds(n: usize) i32 {
-    var sum: i32 = 0x0ABCDEF0;
-    for (n) |_| {
-        sum = sum +% sum;
-    }
-    return sum;
-}
-
-pub fn set_160() void {
-    // Setup clocks, TRM section 6.2.4.1
-    rv32.system.ptr.CPU_PER_CONF.modify(.{ .CPUPERIOD_SEL = 0b01, .PLL_FREQ_SEL = 0b1 });
-
-    // prescale to 40, use PLL clock
-    // TRM register 14.10, tables 6-2 and 6-4
-    rv32.system.ptr.SYSCLK_CONF.modify(.{ .SOC_CLK_SEL = 0b01, .CLK_DIV_EN = 0b1 });
-}
-
 pub fn loop() !void {
-    _ = try rv32.logWriter.print("LOOP {}\r\n", .{loops});
-
-    const adds = loops * 25_000_000;
     const start = rv32.uptime_us();
-    //nnops(10_000_000);
-    const rsum = nadds(adds);
-    //  2_500_001 us at startup
-    // 17490 us after 10_000_000 nops ->
+
+    // loop with NOP takes 5 cycles, so 4_000_000 nops takes 20_000_000 cycles
+    // at @20Mhz that is 1 second
+    // at @160Mhz that is 125 ms
+    nnops(4_000_000);
+
     const stop = rv32.uptime_us();
     const delta = stop - start;
-    _ = try rv32.logWriter.print("Dtime start {} stop {} us {}\r\n", .{ start, stop, delta });
+    const est_freq: u64 = @divTrunc(20_000_000 * 1000, delta);
+    _ = try rv32.logWriter.print("loop {:>8} time (us):{:>8} estimated frequency:{:>8} KHz\r\n", .{ loops, delta, est_freq });
     rv32.delay_ms(1000);
-    try rv32.logWriter.print("SYSCLK_CONF {any}\r\n", .{rv32.system.ptr.SYSCLK_CONF.read()});
-    try rv32.logWriter.print("CPU_PER_CONF {any}\r\n", .{rv32.system.ptr.CPU_PER_CONF.read()});
-    try rv32.logWriter.print("rsum {}\r\n", .{rsum});
+    //try rv32.logWriter.print("SYSCLK_CONF {any}\r\n", .{rv32.system.ptr.SYSCLK_CONF.read()});
+    //try rv32.logWriter.print("CPU_PER_CONF {any}\r\n", .{rv32.system.ptr.CPU_PER_CONF.read()});
 
     switch (loops) {
-        0 => {
-            set_160();
+        3 => {
+            rv32.set_clock_pll(true);
         },
-        else => {},
+        4 => {
+            rv32.set_clock_pll(false);
+        },
+        else => {
+            if ((loops >= 5) and (loops < 1023 + 5))
+                rv32.set_clock_xtal(@truncate(loops - 5));
+        },
     }
+
     // try rv32.logWriter.print("CPU_CLK {any}\r\n", .{get_cpu_freq()});
     // try rv32.logWriter.print("APB_CLK {any}\r\n", .{get_apb_freq()});
 
