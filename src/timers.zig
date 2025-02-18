@@ -2,6 +2,7 @@ const std = @import("std");
 const chip = @import("chip.zig");
 const peripherals = chip.devices.@"ESP32-C3".peripherals;
 
+
 pub const Timer0 = Timer(0);
 pub const Timer1 = Timer(1);
 
@@ -44,6 +45,9 @@ pub fn Timer(comptime n: u1) type {
         pub fn count() u64 {
             // update regs, see 11.2.2
             _ptr.T0UPDATE.modify(.{ .T0_UPDATE = 1 });
+
+            // wait for update to complete
+            while (_ptr.T0UPDATE.read().T0_UPDATE != 0) {}
             const hi = _ptr.T0HI.raw;
             const lo = _ptr.T0LO.raw;
             return (@as(u64, hi) << 32) | @as(u64, lo);

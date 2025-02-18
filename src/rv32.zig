@@ -18,6 +18,9 @@ pub const uart1 = uart.uart1;
 pub const Timer0 = timers.Timer0;
 pub const Timer1 = timers.Timer1;
 
+pub const timer0 = Timer0._ptr;
+pub const timer1 = Timer1._ptr;
+
 pub const logWriter = uart0.writer();
 
 pub fn Bit(comptime x: u5) u32 {
