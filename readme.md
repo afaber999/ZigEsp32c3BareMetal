@@ -94,5 +94,4 @@ $ riscv64-unknown-elf-objdump.exe  -t -h ./zig-out/bin/zfirmware.elf
 # debugging:
 
 openocd_esp/bin/openocd -c "gdb_port 50007" -c "tcl_port 50008" -f "openocd_esp/support/openocd-helpers.tcl" -f board/esp32rv32-builtin.cfg -d3
-
-
+ 
