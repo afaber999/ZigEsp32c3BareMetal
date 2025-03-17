@@ -29,7 +29,7 @@ pub fn setup() !void {
 }
 
 pub fn nnops(n: u32) void {
-    for (n) |_| {
+    for (0..n) |_| {
         asm volatile ("nop");
     }
 }

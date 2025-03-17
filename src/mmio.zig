@@ -36,9 +36,19 @@ pub fn Mmio(comptime PackedT: type) type {
             addr.raw = val;
         }
 
+        /// Set field `field_name` of this register to `value`.
+        /// A one-field version of modify(), more helpful if `field_name` is comptime calculated.
+        pub inline fn modify_one(addr: *volatile Self, comptime field_name: []const u8, value: anytype) void {
+            var val = read(addr);
+            @field(val, field_name) = value;
+            write(addr, val);
+        }
+
+        /// For each `.Field = value` entry of `fields`:
+        /// Set field `Field` of this register to `value`.
         pub inline fn modify(addr: *volatile Self, fields: anytype) void {
             var val = read(addr);
-            inline for (@typeInfo(@TypeOf(fields)).Struct.fields) |field| {
+            inline for (@typeInfo(@TypeOf(fields)).@"struct".fields) |field| {
                 @field(val, field.name) = @field(fields, field.name);
             }
             write(addr, val);

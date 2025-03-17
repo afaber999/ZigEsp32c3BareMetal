@@ -152,9 +152,8 @@ pub inline fn map_core0_cpu_intr_3(interrupt: u5) void {
 
 // ISR wrapper generator
 pub fn make_isr_handler(comptime irq_nr: usize, comptime func: anytype) type {
-    comptime std.debug.assert(@typeInfo(@TypeOf(func)) == .Fn);
+    comptime std.debug.assert(std.mem.eql(u8, "fn () callconv(.c) void", @typeName(@TypeOf(func))));
     comptime std.debug.assert(irq_nr < 32);
-
     return struct {
         pub const exported_name = std.fmt.comptimePrint("_isr_handler_{d:0>2}", .{irq_nr});
         pub const fn_name = nameOf.Fn(func);
@@ -166,8 +165,8 @@ pub fn make_isr_handler(comptime irq_nr: usize, comptime func: anytype) type {
             rv32.Riscv.interrupt_return();
         }
         comptime {
-            const options = .{ .name = exported_name };
-            @export(isr_vector, options);
+            const options: std.builtin.ExportOptions = .{ .name = exported_name };
+            @export(&isr_vector, options);
         }
     };
 }

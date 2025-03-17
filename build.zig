@@ -88,7 +88,7 @@ pub fn build(b: *std.Build) void {
         }
 
         //firmware.addIncludePath(b.path("./src"));
-        firmware.setLinkerScriptPath(b.path(example.link_file));
+        firmware.setLinkerScript(b.path(example.link_file));
 
         b.installArtifact(firmware);
 
