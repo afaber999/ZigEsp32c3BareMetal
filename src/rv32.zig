@@ -1,9 +1,9 @@
 const std = @import("std");
-pub const Debug = @import("Debug.zig");
-pub const Riscv = @import("Riscv.zig");
+pub const Debug = @import("debug.zig");
+pub const Riscv = @import("riscv.zig");
 pub const system = @import("system.zig");
-pub const SysTimer = @import("SysTimer.zig");
-pub const Interrupt = @import("Interrupt.zig");
+pub const SysTimer = @import("sysTimer.zig");
+pub const Interrupt = @import("interrupt.zig");
 pub const ledc = @import("ledc.zig");
 pub const timers = @import("timers.zig");
 pub const rtc = @import("rtc.zig");
