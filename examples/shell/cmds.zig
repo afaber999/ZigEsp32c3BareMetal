@@ -7,7 +7,11 @@ const tw = shell.tw;
 const LED_PIN = 9;
 
 fn echoCmd(args: shell.ArgList) shell.CmdErr!void {
-    _ = try tw.print("You said: {s}\n", .{args});
+    _ = try tw.print("You said:", .{});
+    for (args) |arg| {
+        _ = try tw.print(" {s}", .{arg});
+    }
+    _ = try tw.print("\n", .{});
 }
 
 fn ledCmd(args: shell.ArgList) shell.CmdErr!void {

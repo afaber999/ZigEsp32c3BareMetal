@@ -27,7 +27,7 @@ const int_2 = 2;
 
 // ISR handler for interrupt 2 (timer0 interrupt)
 // have to clear the timer interrupt
-export fn timer_isr_handler() callconv(.C) void {
+export fn timer_isr_handler() callconv(.c) void {
 
     // clear the interrupt
     rv32.timer0.INT_CLR_TIMERS.modify(.{ .T0_INT_CLR = 1 });

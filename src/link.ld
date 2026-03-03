@@ -11,25 +11,25 @@ ENTRY(_start)
 
 SECTIONS
 {
-  .header : 
-  {
-    _irom_start = .;
-    LONG(0xaedb041d)
-    LONG(0xaedb041d)    
-  } > irom
-  PROVIDE(_header_size = SIZEOF(.header));
-
-  . = ALIGN(4);
-  PROVIDE (__stext = .);
-  PROVIDE (_stext = .);
-  PROVIDE (stext = .);
-  PROVIDE (_rv32_text_start = .);
+  . = ORIGIN(irom);
   .text .:
   {
+    _irom_start = .;
+    _header_start = .;
+    KEEP(*(.header))
+    _header_end = .;
+
+    . = ALIGN(4);
+    PROVIDE (__stext = .);
+    PROVIDE (_stext = .);
+    PROVIDE (stext = .);
+    PROVIDE (_rv32_text_start = .);
+
     KEEP(*(.text.entry))
     *(.text*)
     KEEP(*(.text.isr_handler*))
   } > irom
+  PROVIDE(_header_size = _header_end - _header_start);
 
   .isr_table :
   {
@@ -43,9 +43,6 @@ SECTIONS
   PROVIDE (_etext = .);
   PROVIDE (etext = .);
   PROVIDE (_rv32_text_end = .);
-  PROVIDE(_irom_size = SIZEOF(.text));
-
-
   _irom_size = . - _irom_start;
   
   _drom_start = ORIGIN(drom) + _irom_size;

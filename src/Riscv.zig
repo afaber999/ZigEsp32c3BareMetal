@@ -80,5 +80,5 @@ pub inline fn pop_interrupt_state() void {
 }
 
 pub inline fn interrupt_return() void {
-    asm volatile ("mret" ::: "memory");
+    asm volatile ("mret" ::: .{ .memory = true });
 }

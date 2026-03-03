@@ -6,10 +6,10 @@
 const std = @import("std");
 const rv32 = @import("rv32");
 
-extern fn add_numbers(a: i32, b: i32) callconv(.C) i32;
-extern fn led_on() callconv(.C) void;
-extern fn led_off() callconv(.C) void;
-extern fn inc_glob_counts() callconv(.C) void;
+extern fn add_numbers(a: i32, b: i32) callconv(.c) i32;
+extern fn led_on() callconv(.c) void;
+extern fn led_off() callconv(.c) void;
+extern fn inc_glob_counts() callconv(.c) void;
 
 extern var glob_counts: i32;
 

@@ -122,9 +122,12 @@ pub fn wdt_disable() void {
 
 // API GPIO
 pub const Gpio = struct {
-    const GPIO_OUT_EN = 8;
-    const GPIO_OUT_FUNC = 341;
-    const GPIO_IN_FUNC = 85;
+    const GPIO_OUT_REG = 0x04 / 4;
+    const GPIO_IN_REG = 0x3C / 4;
+
+    const GPIO_OUT_EN = 0x20 / 4;
+    const GPIO_OUT_FUNC = 0x554 / 4;
+    const GPIO_IN_FUNC = 0x154 / 4;
 
     pub inline fn output_enable(pin: usize, enable: bool) void {
         Reg.setOrClearBit(&Reg.gpio[GPIO_OUT_EN], pin, enable);
@@ -136,7 +139,7 @@ pub const Gpio = struct {
     }
 
     pub inline fn write(pin: usize, value: bool) void {
-        Reg.setOrClearBit(&Reg.gpio[1], pin, value);
+        Reg.setOrClearBit(&Reg.gpio[GPIO_OUT_REG], pin, value);
     }
     pub inline fn toggle(pin: usize) void {
         Reg.gpio[1] ^= Bit(pin);
@@ -148,7 +151,7 @@ pub const Gpio = struct {
     }
 
     pub inline fn read(pin: usize) bool {
-        const v = Reg.gpio[15] & Bit(pin);
+        const v = Reg.gpio[GPIO_IN_REG] & Bit(pin);
         return v != 0;
     }
 };
@@ -211,7 +214,12 @@ pub const sections = struct {
     pub extern const _vector_table: u8;
 };
 
-export fn _start() linksection(".text.entry") callconv(.Naked) noreturn {
+pub export const _esp32_header align(4) linksection(".header") = [_]u32{
+    0xaedb041d,
+    0xaedb041d,
+};
+
+export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     asm volatile ("la sp, _rv32_stack_top");
     asm volatile ("la fp, _rv32_stack_top"); // since naked function, also set the frame pointer, for temp vars
     asm volatile (
@@ -335,8 +343,8 @@ pub fn hang() noreturn {
     }
 }
 
-pub fn setInterruptVector(id: usize, handler: fn () callconv(.C) noreturn) void {
-    var vector_table = @as([*]volatile u32, @constCast(@ptrCast(@alignCast(&sections._rv32_interrupt_vectors))));
+pub fn setInterruptVector(id: usize, handler: fn () callconv(.c) noreturn) void {
+    var vector_table = @as([*]volatile u32, @ptrCast(@alignCast(@constCast(&sections._rv32_interrupt_vectors))));
     const hu32 = @as(u32, @intFromPtr(&handler));
     //const vector_table = @as([*]volatile u32, @ptrFromInt(&sections._rv32_interrupt_vectors));
     vector_table[id] = hu32;

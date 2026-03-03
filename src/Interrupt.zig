@@ -158,9 +158,9 @@ pub fn make_isr_handler(comptime irq_nr: usize, comptime func: anytype) type {
         pub const exported_name = std.fmt.comptimePrint("_isr_handler_{d:0>2}", .{irq_nr});
         pub const fn_name = nameOf.Fn(func);
 
-        pub fn isr_vector() callconv(.Naked) void {
+        pub fn isr_vector() callconv(.naked) void {
             rv32.Riscv.push_interrupt_state();
-            asm volatile ("jal " ++ fn_name ::: "memory");
+            asm volatile ("jal " ++ fn_name ::: .{ .memory = true });
             rv32.Riscv.pop_interrupt_state();
             rv32.Riscv.interrupt_return();
         }

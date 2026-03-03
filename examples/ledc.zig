@@ -83,8 +83,6 @@ export fn _rv32Start() noreturn {
 var loops: u32 = 0;
 
 pub fn setup() void {
-
-
     rv32.Gpio.output_enable(PIN, true);
     rv32.Gpio.output(PIN);
     rv32.Gpio.write(PIN, true);
@@ -104,6 +102,43 @@ pub fn setup() void {
     // reg |= (0b1111111111) << 11; // CLK_DIV_A
     // reg |= (0b1) << 25; // PARA_UP
     // ledc[Ledc.TIMER0_CONF_REG / 4] = reg;
+
+    // USE PLL, APB clock is set to 80 Mhz
+    rv32.set_clock_pll(true);
+
+    // enable LEDC clock
+    rv32.system.ptr.PERIP_CLK_EN0.modify(.{ .LEDC_CLK_EN = 1 });
+
+    // enable, use APB_CLK
+    rv32.ledc.ptr.CONF.modify(.{
+        .APB_CLK_SEL = 1,
+        .CLK_EN = 1,
+    });
+
+    // bit resolution set to 3
+    // DIV is 1316       80_000_000 / 8 / 658 = 15_200
+    //resolution is 3 bits -> div by 8
+
+    // setup timer 0
+    rv32.ledc.ptr.LSTIMER0_CONF.modify(.{
+        .LSTIMER0_DUTY_RES = 3,
+        .CLK_DIV_LSTIMER0 = 658 * 256,
+        .LSTIMER0_PAUSE = 0,
+        .LSTIMER0_RST = 0,
+        .TICK_SEL_LSTIMER0 = 1,
+    });
+
+    // UPDATE parameters LEDC ch 0 using timer 0
+    rv32.ledc.ptr.LSTIMER0_CONF.modify(.{ .LSTIMER0_PARA_UP = 1 });
+    rv32.ledc.ptr.LSCH0_CONF0.modify(.{
+        .TIMER_SEL_LSCH0 = 0,
+        .SIG_OUT_EN_LSCH0 = 1,
+        .IDLE_LV_LSCH0 = 1,
+    });
+    rv32.ledc.ptr.LSCH0_DUTY.modify(.{ .DUTY_LSCH0 = (8 / 2) << 3 });
+
+    // update all
+    rv32.ledc.ptr.LSCH0_CONF0.modify(.{ .PARA_UP_LSCH0 = 1 });
 }
 
 pub fn loop() !void {
@@ -116,6 +151,3 @@ pub fn loop() !void {
     rv32.Gpio.write(PIN, false);
     rv32.delay_ms(200);
 }
-
-
-

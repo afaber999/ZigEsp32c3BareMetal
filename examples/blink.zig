@@ -16,9 +16,10 @@ pub fn main() void {
     rv32.Gpio.output(PIN);
 
     while (true) {
+        rv32.logWriter.print("Blinking LED on pin {d}\r\n", .{PIN}) catch unreachable;
         rv32.Gpio.write(PIN, true);
         rv32.delay_ms(300);
         rv32.Gpio.write(PIN, false);
-        rv32.delay_ms(700);
+        rv32.delay_ms(1300);
     }
 }

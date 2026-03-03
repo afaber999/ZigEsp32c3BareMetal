@@ -34,7 +34,7 @@ zig build
 
 ### Prerequisites
 
-- **Zig**: Install the Zig compiler (v0.13.0).
+- **Zig**: Install the Zig compiler (v0.15.2).
   - [Download Zig](https://ziglang.org/download/)
 - **ESP32-C3 Development Board**: Ensure your hardware is ready for programming.
 
@@ -80,6 +80,10 @@ esptool
 
 
 # my notes, TODO remove, please ignore
+Note: OBJCOPY is broken in ZIG 0.15.2, so for time being use riscv64 OBJ copy
+temp fix to set to riscv64-unknown-elf-objcopy.exe
+set PATH=:\msys64\mingw64\bin\;%PATH%
+
 riscv64-unknown-elf-objdump  -D ./zig-out/bin/zfirmware.elf > firmware.dis
 ./esptool.exe --chip esp32rv32 elf2image --flash_mode dio --flash_freq 80m --flash_size 4MB ./zig-out/bin/firmware.elf
 

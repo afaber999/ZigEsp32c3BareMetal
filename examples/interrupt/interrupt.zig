@@ -9,9 +9,9 @@ var num_ints = std.mem.zeroes([32]u32);
 // ISR handler for interrupt 1 (SW interrupt)
 // this is a level interrupt, so we have to clear the interrupt
 // in the ISR handler
-// this is a callconv(.C) function, rv32 will take care of the prologue and epilogue and interrupt return
+// this is a callconv(.c) function, rv32 will take care of the prologue and epilogue and interrupt return
 // all registers are saved and restored
-export fn cpu0_isr_handler() callconv(.C) void {
+export fn cpu0_isr_handler() callconv(.c) void {
 
     // blink for now
     if ((num_ints[1] % 2) == 0) {
@@ -26,7 +26,7 @@ export fn cpu0_isr_handler() callconv(.C) void {
 
 // ISR handler for interrupt 2 (SysTimer interrupt)
 // have to clear the timer interrupt
-export fn timer_isr_handler() callconv(.C) void {
+export fn timer_isr_handler() callconv(.c) void {
     rv32.SysTimer.clearTargetInterrupt(0);
     num_ints[2] += 1;
 }
