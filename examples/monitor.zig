@@ -3,7 +3,7 @@ const rv32 = @import("rv32");
 const ascii = std.ascii.control_code;
 
 const tr = rv32.Uart0.read;
-const tw = rv32.uart0.writer();
+var tw = rv32.uart0.writer();
 
 var cmdbuf = std.mem.zeroes([128]u8);
 var cmdbuf_len: usize = 0;

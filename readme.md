@@ -34,7 +34,7 @@ zig build
 
 ### Prerequisites
 
-- **Zig**: Install the Zig compiler (v0.15.2).
+- **Zig**: Install the Zig compiler (v0.16.0).
   - [Download Zig](https://ziglang.org/download/)
 - **ESP32-C3 Development Board**: Ensure your hardware is ready for programming.
 
@@ -80,7 +80,6 @@ esptool
 
 
 # my notes, TODO remove, please ignore
-Note: OBJCOPY is broken in ZIG 0.15.2, so for time being use riscv64 OBJ copy
 temp fix to set to riscv64-unknown-elf-objcopy.exe
 set PATH=:\msys64\mingw64\bin\;%PATH%
 

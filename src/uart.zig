@@ -1,3 +1,4 @@
+const Writer = std.Io.Writer;
 const std = @import("std");
 const rv32 = @import("rv32.zig");
 const chip = @import("chip.zig");
@@ -31,10 +32,24 @@ fn Uart(comptime n: usize) type {
         const UART_FIFO_SIZE = 128;
         const UART_FIFO_HIGH = UART_FIFO_SIZE - 4;
 
-        pub const Writer = std.io.GenericWriter(Self, error{}, generic_writer_fn);
+        fn drain(_: *Writer, data: []const []const u8,
+                 splat: usize) Writer.Error!usize {
+            var count: usize = 0;
+            for (data) |slice| {
+                for (slice) |c|
+                    write(c);
+                count += slice.len;
+            }
+            for (0..splat) |_| {
+                for (data[data.len-1]) |c|
+                    write(c);
+                count += data[data.len-1].len;
+            }
+            return count;
+        }
 
-        pub fn writer(self: Self) Writer {
-            return .{ .context = self };
+        pub fn writer(_: Self) Writer {
+            return .{ .vtable = &.{ .drain = drain }, .buffer = &.{} };
         }
 
         fn generic_writer_fn(self: Self, data: []const u8) error{}!usize {

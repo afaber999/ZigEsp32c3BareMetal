@@ -1,3 +1,4 @@
+const Writer = std.Io.Writer;
 const std = @import("std");
 const cmds = @import("cmds.zig");
 const rv32 = @import("rv32");
@@ -32,7 +33,7 @@ pub fn makeCmd(comptime name: []const u8, comptime handler: CmdHandler) Cmd {
     };
 }
 
-pub const CmdErr = error{ BadArgs, Fail };
+pub const CmdErr = Writer.Error || error{ BadArgs };
 
 pub const Cmd = struct {
     name: []const u8,
@@ -66,7 +67,7 @@ fn runcmd(args: ArgList) !void {
                     return;
                 } else |err| switch (err) { // report error from command handler
                     CmdErr.BadArgs => _ = try tw.print("\nBad arguments\n", .{}),
-                    CmdErr.Fail => _ = try tw.print("\nFailed\n", .{}),
+                    CmdErr.WriteFailed => _ = try tw.print("\nFailed\n", .{}),
                 }
             }
         }

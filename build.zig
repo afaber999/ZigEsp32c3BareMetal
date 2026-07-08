@@ -34,10 +34,6 @@ const Examples = [_]Sample{
 };
 
 pub fn build(b: *std.Build) void {
-    const clean_step = b.step("clean", "Remove build artifacts");
-    const clean_out = b.addRemoveDirTree(.{ .cwd_relative = "zig-out" });
-    clean_step.dependOn(&clean_out.step);
-
     const features = Target.riscv.Feature;
     var disabled_features = Feature.Set.empty;
     var enabled_features = Feature.Set.empty;
@@ -68,32 +64,10 @@ pub fn build(b: *std.Build) void {
         "-fno-omit-frame-pointer",
     };
 
-    const rv32ModuleName = "rv32";
-    const rv32Module = b.addModule(rv32ModuleName, .{ .root_source_file = b.path("src/rv32.zig") });
+    const rv32Module = b.createModule(.{
+        .root_source_file = b.path("src/rv32.zig"),
+    });
     rv32Module.addCSourceFile(.{ .file = b.path("./src/rv32.S"), .flags = cflags });
-
-    const objcopy_candidates = [_][]const u8{
-        "riscv64-unknown-elf-objcopy",
-        "riscv32-unknown-elf-objcopy",
-        "riscv32-esp-elf-objcopy",
-        "objcopy",
-    };
-    const objcopy_search_paths = [_][]const u8{
-        "C:/msys64/mingw64/bin",
-        "C:/msys64/ucrt64/bin",
-        "C:/msys64/usr/bin",
-        "/mingw64/bin",
-        "/ucrt64/bin",
-        "/usr/bin",
-    };
-
-    var gnu_objcopy: ?[]const u8 = null;
-    for (objcopy_candidates) |program_name| {
-        gnu_objcopy = b.findProgram(&.{program_name}, &objcopy_search_paths) catch null;
-        if (gnu_objcopy != null) break;
-    }
-
-    var warned_objcopy_missing = false;
 
     inline for (Examples) |example| {
         const firmware = b.addExecutable(.{
@@ -105,15 +79,16 @@ pub fn build(b: *std.Build) void {
                 //.optimize = .ReleaseSmall,
             }),
         });
-
-        //firmware.root_module.strip = false;
         firmware.root_module.strip = false;
-        firmware.root_module.addImport(rv32ModuleName, rv32Module);
+        firmware.root_module.addImport("rv32", rv32Module);
 
         firmware.setVerboseLink(false);
 
         if (example.asm_file) |asm_file| {
-            firmware.addCSourceFile(.{ .file = b.path(asm_file), .flags = cflags });
+            firmware.root_module.addCSourceFile(.{
+                .file = b.path(asm_file),
+                .flags = cflags,
+            });
         }
 
         //firmware.addIncludePath(b.path("./src"));
@@ -121,31 +96,15 @@ pub fn build(b: *std.Build) void {
 
         b.installArtifact(firmware);
 
-        // Copy the bin out of the elf, OBJ copy in zig 0.15 is broken, so we use objcopy directly
-        // const bin = b.addObjCopy(firmware.getEmittedBin(), .{
-        //     .format = .bin,
-        // });
-        // bin.step.dependOn(&firmware.step);
+        // Copy the bin out of the elf
+        const bin = b.addObjCopy(firmware.getEmittedBin(), .{
+            .format = .bin,
+        });
+        bin.step.dependOn(&firmware.step);
         // Copy the bin to the output directory
-        // const copy_bin = b.addInstallBinFile(bin.getOutput(), example.name ++ ".bin");
-        // b.default_step.dependOn(&copy_bin.step);
-
-        // Use GNU objcopy to create .bin files (avoids objcopy issues in zig 0.15)
-        if (gnu_objcopy) |objcopy_path| {
-            const bin_filename = b.fmt("{s}.bin", .{example.name});
-            const objcopy_run = b.addSystemCommand(&.{objcopy_path});
-            objcopy_run.addArgs(&.{ "-O", "binary" });
-            objcopy_run.addFileArg(firmware.getEmittedBin());
-            const bin_output = objcopy_run.addOutputFileArg(bin_filename);
-            b.getInstallStep().dependOn(&b.addInstallFileWithDir(
-                bin_output,
-                .{ .custom = "bin" },
-                bin_filename,
-            ).step);
-        } else if (!warned_objcopy_missing) {
-            std.log.warn("GNU objcopy not found (tried: riscv64-unknown-elf-objcopy, riscv32-unknown-elf-objcopy, riscv32-esp-elf-objcopy, objcopy); skipping .bin generation", .{});
-            warned_objcopy_missing = true;
-        }
+        const copy_bin = b.addInstallBinFile(bin.getOutput(),
+                                             example.name ++ ".bin");
+        b.default_step.dependOn(&copy_bin.step);
 
         const flash_cmd_script = switch (builtin.os.tag) {
             .windows => "./flash.cmd",

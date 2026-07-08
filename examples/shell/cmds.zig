@@ -2,7 +2,7 @@ const std = @import("std");
 const shell = @import("shell.zig");
 const rv32 = @import("rv32");
 
-const tw = shell.tw;
+const tw = &shell.tw;
 
 const LED_PIN = 9;
 
